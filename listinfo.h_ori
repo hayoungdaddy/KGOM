@@ -1,0 +1,63 @@
+#ifndef LISTINFO_H
+#define LISTINFO_H
+
+#include "common.h"
+
+#include "intensitydialog.h"
+#include "alertdialog.h"
+#include "magdialog.h"
+#include "distancedialog.h"
+
+#include <QWidget>
+
+
+namespace Ui {
+class ListInfo;
+}
+
+class ListInfo : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit ListInfo(QWidget *parent = 0);
+    ~ListInfo();
+
+    void setup(_KGOnSite_Pick_t pick, _KGOnSite_Info_t info);
+    IntensityDialog *intendialog;
+    AlertDialog *alertdialog;
+    MagDialog *magdialog;
+    DistanceDialog *distdialog;
+
+private slots:
+    void intenPBClicked();
+    void alertPBClicked();
+    void magPBClicked();
+    void distPBClicked();
+
+private:
+    Ui::ListInfo *ui;
+
+    void setIntenWG(double inten);
+    void setAlertWG(int alert);
+    void setMagWG(double mag);
+    void setDistWG(double dist);
+
+    QFont *topF;
+    QFont *middleF;
+    QFont *bottomF;
+
+    QStringList intenList;
+    QStringList intenColors;
+    QStringList intenSubList;
+    QStringList alertList;
+    QStringList alertColors;
+    QStringList magList;
+    QStringList magSubList;
+    QStringList magColors;
+    QStringList distList;
+    QStringList distColors;
+    QStringList distSubList;
+};
+
+#endif // LISTINFO_H

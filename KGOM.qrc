@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Viewmap.qml</file>
+        <file>Selectsta.qml</file>
+        <file>KissStaMarker.qml</file>
+        <file>LocalStaMarker.qml</file>
+        <file>EEWStarMarker.qml</file>
+        <file>MyPositionMarker.qml</file>
+        <file>MapText.qml</file>
+        <file>Icon/icon1.png</file>
+        <file>Icon/icon2.png</file>
+        <file>Icon/icon3.png</file>
+        <file>Icon/icon4.png</file>
+        <file>Icon/icon5.png</file>
+        <file>Icon/icon6.png</file>
+        <file>Icon/icon7.jpg</file>
+        <file>Icon/redStar.png</file>
+        <file>Icon/redStar2.png</file>
+        <file>Icon/localMarker.png</file>
+        <file>Icon/kissMarker.png</file>
+        <file>Icon/GreenSta2.png</file>
+        <file>Icon/RedSta2.png</file>
+        <file>Icon/triangle-blue.png</file>
+        <file>Icon/triangle-red.png</file>
+        <file>Icon/triangle-green.png</file>
+        <file>Icon/triangle-caution.png</file>
+        <file>Icon/triangle-warning.png</file>
+        <file>Icon/triangle-red-white.png</file>
+    </qresource>
+</RCC>

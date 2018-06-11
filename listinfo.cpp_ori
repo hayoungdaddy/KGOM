@@ -1,0 +1,136 @@
+#include "listinfo.h"
+#include "ui_listinfo.h"
+
+ListInfo::ListInfo(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::ListInfo)
+{
+    ui->setupUi(this);
+
+    connect(ui->intenPB, SIGNAL(clicked(bool)), this, SLOT(intenPBClicked()));
+    connect(ui->alertPB, SIGNAL(clicked(bool)), this, SLOT(alertPBClicked()));
+    connect(ui->magPB, SIGNAL(clicked(bool)), this, SLOT(magPBClicked()));
+    connect(ui->distPB, SIGNAL(clicked(bool)), this, SLOT(distPBClicked()));
+
+    intendialog = new IntensityDialog(this);     intendialog->hide();
+    alertdialog = new AlertDialog(this);     alertdialog->hide();
+    magdialog = new MagDialog(this);    magdialog->hide();
+    distdialog = new DistanceDialog(this);  distdialog->hide();
+
+    topF = new QFont("Ubuntu", 12, QFont::Bold);
+    middleF = new QFont("Ubuntu", 11, QFont::Bold);
+    bottomF = new QFont("Ubuntu", 11, QFont::Normal);
+
+    intenList << "I" << "II" << "III" << "IV" << "V" << "VI" << "VII" << "VIII" << "IX" << "X+";
+    intenColors << "#ffffff" << "#bfccff" << "#a0e6ff" << "#80ffff" << "#7aff93" << "#ffff00"
+                << "#ffc800" << "#ff9100" << "#ff0000" << "#c80000";
+    intenSubList << "No Damage\n(no shaking)"
+                 << "No Damage\n(weak shaking)"
+                 << "No Damage\n(weak shaking)"
+                 << "No Damage\n(light shaking)"
+                 << "Very Light Damage\n(moderate shaking)"
+                 << "Light Damage\n(strong shaking)"
+                 << "Moderate Damage\n(very strong shaking)"
+                 << "Moderate-Heavy Damage\n(severe shaking)"
+                 << "Heavy Damage\n(violent shaking)"
+                 << "Very Heavy Damage\n(extreme shaking)";
+
+    alertList << "No\nDamage" << "Far\nDamage" << "Local\nDamage" << "Local & Far\nDamage";
+    alertColors << "#CCCCCC" << "#46BFBD" << "#FDB45C" << "#F7464A";
+
+    magList << "Small" << "Medium" << "Moderate" << "Large";
+    magColors << "#CCFFCC" << "#FFFF33" << "#FF9900" << "#FF3333";
+    magSubList << "M < 3" << "3 < M < 5" << "5 < M < 6.5" << "M > 6.5";
+
+    distList << "Far" << "Medium" << "Near";
+    distColors << "#CCFFCC" << "#FF3333" << "#FFFF33";
+    distSubList << "KM > 150" << "50 < KM < 150" << "KM < 50";
+}
+
+ListInfo::~ListInfo()
+{
+    delete ui;
+}
+
+void ListInfo::setup(_KGOnSite_Pick_t pick, _KGOnSite_Info_t info)
+{
+    QDateTime t; t.setTime_t(pick.ttime);
+    t.setTimeSpec(Qt::UTC);
+    t = convertKST(t);
+    ui->timeLB->setText(t.toString("yy-MM-dd hh:mm:ss"));
+
+    QString scnl;
+    scnl = QString::fromStdString(pick.sta) + "/" + QString::fromStdString(pick.chan) + "/" +
+            QString::fromStdString(pick.net) + "/" + QString::fromStdString(pick.loc);
+    ui->scnlLB->setText(QString::fromStdString(pick.sta));
+
+    setIntenWG(info.intensity);
+    //qDebug() << "inten" << info.intensity;
+    setAlertWG(info.alert);
+    //qDebug() << "alert" << info.alert;
+    setMagWG(info.magnitude);
+    //qDebug() << "mag" << info.magnitude;
+    setDistWG(info.distance);
+    //qDebug() << "dist" << info.distance;
+}
+
+void ListInfo::intenPBClicked()
+{
+    intendialog->show();
+}
+
+void ListInfo::alertPBClicked()
+{
+    alertdialog->show();
+}
+
+void ListInfo::magPBClicked()
+{
+    magdialog->show();
+}
+
+void ListInfo::distPBClicked()
+{
+    distdialog->show();
+}
+
+void ListInfo::setIntenWG(double inten)
+{
+    int intenI = (int)inten;
+    QString style = "background-color:" + intenColors.at(intenI);
+    ui->intenLB->setStyleSheet(style);
+    ui->intenLB->setText(intenList.at(intenI));
+}
+
+void ListInfo::setAlertWG(int alert)
+{
+    ui->alertLB->setText(QString::number(alert));
+    QString style = "background-color:" + alertColors.at(alert);
+    ui->alertLB->setStyleSheet(style);
+}
+
+void ListInfo::setMagWG(double mag)
+{
+    int magI;
+    if(mag < 3) magI = 0;
+    else if(mag >= 3 && mag < 5) magI = 1;
+    else if(mag >= 5 && mag < 6.5) magI = 2;
+    else if(mag >= 6.5) magI = 3;
+
+    QString style = "background-color:" + magColors.at(magI);
+    ui->magLB->setStyleSheet(style);
+    ui->magLB->setText(magList.at(magI));
+}
+
+void ListInfo::setDistWG(double dist)
+{
+    int distI;
+
+    if(dist >= 150) distI = 0;
+    else if(dist >= 50 && dist < 150) distI = 1;
+    else if(dist < 50) distI = 2;
+
+    QString style = "background-color:" + distColors.at(distI);
+    ui->distLB->setStyleSheet(style);
+    ui->distLB->setText(distList.at(distI));
+}
