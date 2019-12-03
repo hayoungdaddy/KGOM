@@ -673,7 +673,10 @@ void MainWindow::stopBlinkPBClicked()
 
     blinkTimer->stop();
     if(configure.alarm_device_ip != "")
+    {
+        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
         controlAlarm->stopBlinkAll();
+    }
     ui->mainToolBar->actions().at(3)->setVisible(false);
     ui->mainTW->setStyleSheet(style);
     blinkCount = 0;
@@ -948,6 +951,7 @@ void MainWindow::alerting(double mag, double dist)
         {
             if(configure.alarm_device_ip != "")
             {
+                controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
                 controlAlarm->blinkYELLOW();
                 log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked");
             }
@@ -959,6 +963,7 @@ void MainWindow::alerting(double mag, double dist)
         {
             if(configure.alarm_device_ip != "")
             {
+                controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
                 controlAlarm->blinkRED();
                 log->write(configure.KGOM_HOME + "/logs/", "Red Alarm Worked");
             }

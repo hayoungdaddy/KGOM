@@ -35,12 +35,12 @@ Rectangle {
         id: streetPlugin
         name: "osm"
 
-        PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: false }
-        PluginParameter { name: "osm.mapping.providersrepository.address"; value: "http://localhost/osm_tile/" }
-        PluginParameter { name: "osm.mapping.custom.host"; value: "http://localhost/osm_tile/" }
+        //PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: false }
+        //PluginParameter { name: "osm.mapping.providersrepository.address"; value: "http://localhost/osm_tile/" }
+        //PluginParameter { name: "osm.mapping.custom.host"; value: "http://localhost/osm_tile/" }
         PluginParameter { name: "osm.mapping.highdpi_tiles"; value: true }
         //PluginParameter { name: "osm.mapping.cache.directory"; value: "/.KGOM/map_data" }
-        //PluginParameter { name: "osm.mapping.offline.directory"; value: "/.KGOM/map_data" }
+        PluginParameter { name: "osm.mapping.offline.directory"; value: "/.KGOM/map_data" }
     }
 
     Map {
