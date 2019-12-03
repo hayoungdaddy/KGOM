@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EewDetailTable</class>
+ <widget class="QWidget" name="EewDetailTable">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1100</width>
+    <height>130</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QLabel" name="titleLB">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="eewTW">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>50</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>100</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 255);
+QTableView::item {
+	font-size: 9pt;
+} </string>
+     </property>
+     <attribute name="horizontalHeaderDefaultSectionSize">
+      <number>150</number>
+     </attribute>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="verticalHeaderHighlightSections">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="verticalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>type</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>eew_evid</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>version</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>msg_category</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>msg_type</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>magnitude</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>magnitude_uncertainty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>latitude</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>latitude_uncertainty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>longitude</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>longitude_uncertainty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>depth</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>depth_uncertainty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>originTime</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>originTime_uncertainty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>nStations</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>nTriggers</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>sentFlag</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>sentTime</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>percentSta</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>misfit</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>status</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
