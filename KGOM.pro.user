@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.8.0, 2019-12-03T02:09:52. -->
+<!-- Written by QtCreator 4.8.0, 2019-12-06T04:04:30. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -297,7 +297,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">KGOM</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/sysop/GIT/KGOM/KGOM_V2_0/KGOM.pro</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">KGOM.pro</value>
-    <value type="QString" key="RunConfiguration.Arguments">/home/sysop/KGOM/params/KGOM.params</value>
+    <value type="QString" key="RunConfiguration.Arguments">/home/sysop/KGOM/params/KGOM_KORAD.params</value>
     <value type="uint" key="RunConfiguration.QmlDebugServerPort">3768</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>

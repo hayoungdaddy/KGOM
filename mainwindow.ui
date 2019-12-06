@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">
@@ -1943,6 +1943,9 @@ color: white</string>
        </layout>
       </widget>
       <widget class="QWidget" name="realTimeTab">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>REALTIME PGA</string>
        </attribute>

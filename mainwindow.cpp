@@ -154,6 +154,11 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     QMetaObject::invokeMethod(this->rRootObj, "clearMap", Q_RETURN_ARG(QVariant, rReturnedValue));
     QMetaObject::invokeMethod(this->rRootObj, "createMyPositionMarker", Q_RETURN_ARG(QVariant, rReturnedValue));
 
+
+    //ui->mainTW->setTabEnabled(2, false);
+    ui->mainTW->removeTab(2); // because KOREAD cannot receive the QSCD20
+    //ui->realTimeTab->hide();
+
     // Open DB
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(configure.KGOM_HOME + "/data/KGOM.db");

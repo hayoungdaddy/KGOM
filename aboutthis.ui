@@ -134,8 +134,8 @@
        </property>
        <property name="text">
         <string>소   속 : 한국지질자원연구원 지진연구센터
-성   명 : 박정호
-E-mail : jhpark@kigam.re.kr</string>
+성   명 : 박정호, 윤여웅
+E-mail : jhpark@kigam.re.kr, ywyun@kigam.re.kr</string>
        </property>
       </widget>
      </item>
