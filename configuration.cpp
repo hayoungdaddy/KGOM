@@ -29,24 +29,8 @@ void Configuration::setup(_CONFIGURE configure)
 
     ui->myLatLE->setText(QString::number(con.myposition_lat, 'f', 4));
     ui->myLonLE->setText(QString::number(con.myposition_lon, 'f', 4));
-    ui->kigamAmqIpLE->setText(con.kigam_amq_ip);
-    ui->kigamAmqPortLE->setText(con.kigam_amq_port);
-    ui->kigamAmqIdLE->setText(con.kigam_amq_user);
-    ui->kigamAmqPwLE->setText(con.kigam_amq_passwd);
-    ui->kigamAmqEewTopicLE->setText(con.kigam_eew_topic);
-    ui->kigamAmqPickTopicLE->setText(con.kigam_onsite_topic);
-    ui->kigamAmqSohTopicLE->setText(con.kigam_soh_topic);
-    ui->localAmqIpLE->setText(con.local_amq_ip);
-    ui->localAmqPortLE->setText(con.local_amq_port);
-    ui->localAmqIdLE->setText(con.local_amq_user);
-    ui->localAmqPwLE->setText(con.local_amq_passwd);
-    ui->localAmqPickTopicLE->setText(con.local_onsite_topic);
-    ui->localAmqPGATopicLE->setText(con.local_pga_topic);
-    ui->localAmqSohTopicLE->setText(con.local_soh_topic);
     ui->pVelLE->setText(QString::number(con.p_vel, 'f', 2));
     ui->sVelLE->setText(QString::number(con.s_vel, 'f', 2));
-    //if(con.soh_alert_use==0) ui->sohAlertUseCB->setChecked(false); else ui->sohAlertUseCB->setChecked(true);
-    //ui->sohAlertSecLE->setText(QString::number(con.soh_alert_sec));
     if(con.level1_alert_use==0) ui->level1AlertUseCB->setChecked(false); else ui->level1AlertUseCB->setChecked(true);
     ui->level1AlertMinMagLE->setText(QString::number(con.level1_alert_min_mag, 'f', 1));
     ui->level1AlertMaxMagLE->setText(QString::number(con.level1_alert_max_mag, 'f', 1));
@@ -59,7 +43,41 @@ void Configuration::setup(_CONFIGURE configure)
 
 void Configuration::writeConfigureToFile()
 {
-    // to do : check validation
+/*
+#My Position Info
+MYPOSITION_LAT=35.8714
+MYPOSITION_LON=128.6019
+
+#Local Station Info
+
+#KISS Station Info
+KISS_STA=GKP1:HGZ:KG:--:35.889300:128.606050:56.0
+KISS_STA=DAU:HGZ:KS:--:35.885600:128.618800:9.0
+KISS_STA=DAG2:HGZ:KS:--:35.768500:128.897000:294.0
+KISS_STA=CIGB:HGZ:KS:--:36.039900:128.381300:74.000000
+KISS_STA=YOCB:HGZ:KS:--:35.977100:128.951100:143.000000
+KISS_STA=CHR:HGZ:KS:--:35.544000:128.491700:115.000000
+
+#LOCAL AMQ Server Info
+LOCAL_ONSITE_AMQ=::::
+LOCAL_SOH_AMQ=::::
+LOCAL_PGA_AMQ=::::
+
+#KIGAM AMQ Server Info
+KISS_EEW_AMQ=210.98.8.82:61616:elarms:h3ePs7bn:elarms.data.client
+KISS_ONSITE_AMQ=172.31.100.137:61616:::KSEIS.KGOnsite_Pick
+KISS_SOH_AMQ=172.31.100.137:61616:::KSEIS.KGOnSite_SOH
+KISS_PGA_AMQ=172.310.100.137:61616:::KGKIIS.KISS.QSCDBLOCK
+
+#Velocity Info
+P_VEL=5.50
+S_VEL=3.50
+
+#Alert Level
+ALARM_DEVICE=:0
+LEVEL1=1:2.0:4.0:100
+LEVEL2=1:4.0:999.0:9999
+*/
 
     // write a configuration file
     QFile file(con.configFileName);
@@ -90,19 +108,16 @@ void Configuration::writeConfigureToFile()
 
         stream << "\n";
         stream << "#LOCAL AMQ Server Info" << "\n";
-        stream << "LOCAL_AMQ_INFO=" << ui->localAmqIpLE->text() << ":" << ui->localAmqPortLE->text()
-               << ":" << ui->localAmqIdLE->text() << ":" << ui->localAmqPwLE->text() << "\n";
-        stream << "LOCAL_ONSITE_TOPIC=" << ui->localAmqPickTopicLE->text() << "\n";
-        stream << "LOCAL_PGA_TOPIC=" << ui->localAmqPGATopicLE->text() << "\n";
-        stream << "LOCAL_SOH_TOPIC=" << ui->localAmqSohTopicLE->text() << "\n";
+        stream << "LOCAL_ONSITE_AMQ=" << con.local_onsite_amq.ip << ":" << con.local_onsite_amq.port << ":" << con.local_onsite_amq.user << ":" << con.local_onsite_amq.passwd << ":" << con.local_onsite_amq.topic << "\n";
+        stream << "LOCAL_SOH_AMQ=" << con.local_soh_amq.ip << ":" << con.local_soh_amq.port << ":" << con.local_soh_amq.user << ":" << con.local_soh_amq.passwd << ":" << con.local_soh_amq.topic << "\n";
+        stream << "LOCAL_PGA_AMQ=" << con.local_pga_amq.ip << ":" << con.local_pga_amq.port << ":" << con.local_pga_amq.user << ":" << con.local_pga_amq.passwd << ":" << con.local_pga_amq.topic << "\n";
 
         stream << "\n";
         stream << "#KIGAM AMQ Server Info" << "\n";
-        stream << "KIGAM_AMQ_INFO=" << ui->kigamAmqIpLE->text() << ":" << ui->kigamAmqPortLE->text()
-               << ":" << ui->kigamAmqIdLE->text() << ":" << ui->kigamAmqPwLE->text() << "\n";
-        stream << "KIGAM_EEW_TOPIC=" << ui->kigamAmqEewTopicLE->text() << "\n";
-        stream << "KIGAM_ONSITE_TOPIC=" << ui->kigamAmqPickTopicLE->text() << "\n";
-        stream << "KIGAM_SOH_TOPIC=" << ui->kigamAmqSohTopicLE->text() << "\n";
+        stream << "KISS_EEW_AMQ=" << con.kiss_eew_amq.ip << ":" << con.kiss_eew_amq.port << ":" << con.kiss_eew_amq.user << ":" << con.kiss_eew_amq.passwd << ":" << con.kiss_eew_amq.topic << "\n";
+        stream << "KISS_ONSITE_AMQ=" << con.kiss_onsite_amq.ip << ":" << con.kiss_onsite_amq.port << ":" << con.kiss_onsite_amq.user << ":" << con.kiss_onsite_amq.passwd << ":" << con.kiss_onsite_amq.topic << "\n";
+        stream << "KISS_SOH_AMQ=" << con.kiss_soh_amq.ip << ":" << con.kiss_soh_amq.port << ":" << con.kiss_soh_amq.user << ":" << con.kiss_soh_amq.passwd << ":" << con.kiss_soh_amq.topic << "\n";
+        stream << "KISS_PGA_AMQ=" << con.kiss_pga_amq.ip << ":" << con.kiss_pga_amq.port << ":" << con.kiss_pga_amq.user << ":" << con.kiss_pga_amq.passwd << ":" << con.kiss_pga_amq.topic << "\n";
 
         stream << "\n";
         stream << "#Velocity Info" << "\n";
@@ -112,10 +127,6 @@ void Configuration::writeConfigureToFile()
         stream << "\n";
         stream << "#Alert Level" << "\n";
         stream << "ALARM_DEVICE=" << con.alarm_device_ip << ":" << QString::number(con.alarm_device_port) << "\n";
-        //stream << "SOH_ALERT=";
-        //if(ui->sohAlertUseCB->isChecked()) stream << "1";
-        //else stream << "0";
-        //stream << ":" << ui->sohAlertSecLE->text() << "\n";
         stream << "LEVEL1=";
         if(ui->level1AlertUseCB->isChecked()) stream << "1";
         else stream << "0";

@@ -519,19 +519,16 @@ void ConfigurationWizard::writeConfigureToFile()
 
         stream << "\n";
         stream << "#LOCAL AMQ Server Info" << "\n";
-        stream << "LOCAL_AMQ_INFO=" << con.local_amq_ip << ":" << con.local_amq_port
-               << ":" << con.local_amq_user << ":" << con.local_amq_passwd << "\n";
-        stream << "LOCAL_ONSITE_TOPIC=" << con.local_onsite_topic << "\n";
-        stream << "LOCAL_PGA_TOPIC=" << con.local_pga_topic << "\n";
-        stream << "LOCAL_SOH_TOPIC=" << con.local_soh_topic << "\n";
+        stream << "LOCAL_ONSITE_AMQ=" << con.local_onsite_amq.ip << ":" << con.local_onsite_amq.port << ":" << con.local_onsite_amq.user << ":" << con.local_onsite_amq.passwd << ":" << con.local_onsite_amq.topic << "\n";
+        stream << "LOCAL_SOH_AMQ=" << con.local_soh_amq.ip << ":" << con.local_soh_amq.port << ":" << con.local_soh_amq.user << ":" << con.local_soh_amq.passwd << ":" << con.local_soh_amq.topic << "\n";
+        stream << "LOCAL_PGA_AMQ=" << con.local_pga_amq.ip << ":" << con.local_pga_amq.port << ":" << con.local_pga_amq.user << ":" << con.local_pga_amq.passwd << ":" << con.local_pga_amq.topic << "\n";
 
         stream << "\n";
         stream << "#KIGAM AMQ Server Info" << "\n";
-        stream << "KIGAM_AMQ_INFO=" << con.kigam_amq_ip << ":" << con.kigam_amq_port
-               << ":" << con.kigam_amq_user << ":" << con.kigam_amq_passwd << "\n";
-        stream << "KIGAM_EEW_TOPIC=" << con.kigam_eew_topic << "\n";
-        stream << "KIGAM_ONSITE_TOPIC=" << con.kigam_onsite_topic << "\n";
-        stream << "KIGAM_SOH_TOPIC=" << con.kigam_soh_topic << "\n";
+        stream << "KISS_EEW_AMQ=" << con.kiss_eew_amq.ip << ":" << con.kiss_eew_amq.port << ":" << con.kiss_eew_amq.user << ":" << con.kiss_eew_amq.passwd << ":" << con.kiss_eew_amq.topic << "\n";
+        stream << "KISS_ONSITE_AMQ=" << con.kiss_onsite_amq.ip << ":" << con.kiss_onsite_amq.port << ":" << con.kiss_onsite_amq.user << ":" << con.kiss_onsite_amq.passwd << ":" << con.kiss_onsite_amq.topic << "\n";
+        stream << "KISS_SOH_AMQ=" << con.kiss_soh_amq.ip << ":" << con.kiss_soh_amq.port << ":" << con.kiss_soh_amq.user << ":" << con.kiss_soh_amq.passwd << ":" << con.kiss_soh_amq.topic << "\n";
+        stream << "KISS_PGA_AMQ=" << con.kiss_pga_amq.ip << ":" << con.kiss_pga_amq.port << ":" << con.kiss_pga_amq.user << ":" << con.kiss_pga_amq.passwd << ":" << con.kiss_pga_amq.topic << "\n";
 
         stream << "\n";
         stream << "#Velocity Info" << "\n";

@@ -121,7 +121,7 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>20</number>
+         <number>15</number>
         </property>
         <item>
          <widget class="QLabel" name="locLB">
@@ -192,6 +192,11 @@
         </item>
         <item>
          <widget class="QLabel" name="latLB">
+          <property name="font">
+           <font>
+            <pointsize>6</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>lat-hide</string>
           </property>
@@ -199,6 +204,11 @@
         </item>
         <item>
          <widget class="QLabel" name="lonLB">
+          <property name="font">
+           <font>
+            <pointsize>6</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>lon-hide</string>
           </property>

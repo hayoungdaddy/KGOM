@@ -66,9 +66,9 @@ private:
     RecvEEWMessage *krecveew;
     RecvOnsiteMessage *krecvOnsite;
     RecvSOHMessage *krecvSoh;
-    RecvRealTimePGAMessage *krealTimePGA;
+    RecvRealTimePGAMessage *krecvPGA;
     RecvOnsiteMessage *lrecvOnsite;
-    RecvPGAMessage *lrecvPGA;
+    RecvRealTimePGAMessage *lrecvPGA;
     RecvSOHMessage *lrecvSoh;
 
     // Search form widget

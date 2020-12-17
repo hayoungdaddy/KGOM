@@ -8,10 +8,11 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QTextCodec>
+#include <QtMath>
 
-#define KGOM_VERSION 1.0
+#define KGOM_VERSION 2.0
 
-#define MAX_LOCALSTA_NUM 9
+#define MAX_LOCALSTA_NUM 6
 #define MAX_KISSSTA_NUM 6
 #define MAX_ONSITE_NUM MAX_LOCALSTA_NUM + MAX_KISSSTA_NUM
 
@@ -175,7 +176,6 @@ typedef struct _kgonsite_soh_t
 
   char named[STR_MAX_LENGTH];
   char comment[STR_MAX_LENGTH];
-
 } _KGOnSite_SOH_t;
 
 typedef struct _gmpeak_event_sta_t
@@ -216,34 +216,33 @@ typedef struct _gmpeak_event_t
 
 typedef struct _kgonsite_sta_option_t
 {
-  int version ;
+    int version ;
 
-  char msg_type ;                    // 'O' Option
+    char msg_type ;                    // 'O' Option
 
-  char sta[STA_LEN];
-  char chan[CHAN_LEN];
-  char net[NET_LEN];
-  char loc[LOC_LEN];
+    char sta[STA_LEN];
+    char chan[CHAN_LEN];
+    char net[NET_LEN];
+    char loc[LOC_LEN];
 
-  float lat ;
-  float lon ;
-  float elev ;
+    float lat ;
+    float lon ;
+    float elev ;
 
-  char station_type ;                          // 'S' structure, 'F' freefield
+    char station_type ;                          // 'S' structure, 'F' freefield
 
-  char unit[ STR_MAX_LENGTH ] ;                      // M/S, M/S*S
-  int level ;
+    char unit[ STR_MAX_LENGTH ] ;                      // M/S, M/S*S
+    int level ;
 
-  char sensor_name[ STR_MAX_LENGTH ] ;
-  char logger_name[ STR_MAX_LENGTH ] ;
-  char organization_name[ STR_MAX_LENGTH ] ;
+    char sensor_name[ STR_MAX_LENGTH ] ;
+    char logger_name[ STR_MAX_LENGTH ] ;
+    char organization_name[ STR_MAX_LENGTH ] ;
 
-  double physical_factor ;
+    double physical_factor ;
 
-  time_t report_time ;
+    time_t report_time ;
 
-  char dummy[ STR_MAX_LENGTH ] ;
-
+    char dummy[ STR_MAX_LENGTH ] ;
 } _KGOnSite_Sta_Option_t ;
 
 typedef struct _kgonsite_option_t
@@ -312,6 +311,15 @@ typedef struct _station
     float maxPGA;
 } _STATION;
 
+typedef struct _amqinfo
+{
+    QString ip;
+    QString port;
+    QString user;
+    QString passwd;
+    QString topic;
+} _AMQINFO;
+
 typedef struct _configure
 {
     QString KGOM_HOME;
@@ -324,18 +332,19 @@ typedef struct _configure
     QVector<_STATION> kissStaVT;
 
     // KIGAM ActiveMQ
-    QString kigam_amq_ip, kigam_amq_port, kigam_amq_user, kigam_amq_passwd;
-    QString kigam_eew_topic, kigam_onsite_topic, kigam_soh_topic;
+    _AMQINFO kiss_eew_amq;
+    _AMQINFO kiss_onsite_amq;
+    _AMQINFO kiss_soh_amq;
+    _AMQINFO kiss_pga_amq;
 
     // LOCAL ActiveMQ
-    QString local_amq_ip, local_amq_port, local_amq_user, local_amq_passwd;
-    QString local_onsite_topic, local_pga_topic, local_soh_topic;
+    _AMQINFO local_onsite_amq;
+    _AMQINFO local_soh_amq;
+    _AMQINFO local_pga_amq;
 
     // Alert Level
     QString alarm_device_ip;
     int alarm_device_port;
-    //int soh_alert_use;
-    //int soh_alert_sec;
     int level1_alert_use;
     float level1_alert_min_mag;
     float level1_alert_max_mag;

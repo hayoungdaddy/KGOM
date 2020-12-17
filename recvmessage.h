@@ -116,7 +116,6 @@ public:
     Session *session;
     Destination *destination;
     MessageConsumer *consumer;
-    //QString ip;
     QVector<_STATION> stationVT;
     int isKissStation;
 

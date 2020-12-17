@@ -23,9 +23,9 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     krecveew = new RecvEEWMessage(this);
     krecvOnsite = new RecvOnsiteMessage(this);
     krecvSoh = new RecvSOHMessage(this);
-    krealTimePGA = new RecvRealTimePGAMessage(this);
+    krecvPGA = new RecvRealTimePGAMessage(this);
     lrecvOnsite = new RecvOnsiteMessage(this);
-    lrecvPGA = new RecvPGAMessage(this);
+    lrecvPGA = new RecvRealTimePGAMessage(this);
     lrecvSoh = new RecvSOHMessage(this);
 
     codec = QTextCodec::codecForName("utf-8");
@@ -154,11 +154,6 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     QMetaObject::invokeMethod(this->rRootObj, "clearMap", Q_RETURN_ARG(QVariant, rReturnedValue));
     QMetaObject::invokeMethod(this->rRootObj, "createMyPositionMarker", Q_RETURN_ARG(QVariant, rReturnedValue));
 
-
-    //ui->mainTW->setTabEnabled(2, false);
-    ui->mainTW->removeTab(2); // because KOREAD cannot receive the QSCD20
-    //ui->realTimeTab->hide();
-
     // Open DB
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(configure.KGOM_HOME + "/data/KGOM.db");
@@ -230,16 +225,14 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    //activemq::library::ActiveMQCPP::shutdownLibrary();
-
     if(krecveew->isRunning())
         krecveew->requestInterruption();
     if(krecvOnsite->isRunning())
         krecvOnsite->requestInterruption();
     if(krecvSoh->isRunning())
         krecvSoh->requestInterruption();
-    if(krealTimePGA->isRunning())
-        krealTimePGA->requestInterruption();
+    if(krecvPGA->isRunning())
+        krecvPGA->requestInterruption();
     if(lrecvOnsite->isRunning())
         lrecvOnsite->requestInterruption();
     if(lrecvPGA->isRunning())
@@ -787,42 +780,67 @@ void MainWindow::readConfigure(QString configFile)
                 sta.maxPGATime = 0; sta.maxPGA = 0;
                 configure.kissStaVT.push_back(sta);
             }
-            else if(_line.startsWith("LOCAL_AMQ_INFO") && _line.section("=",1,1) != ":::")
+            else if(_line.startsWith("LOCAL_ONSITE_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
             {
-                configure.local_amq_ip = _line.section("=",1,1).section(":", 0, 0);
-                configure.local_amq_port = _line.section("=", 1, 1).section(":", 1, 1);
-                configure.local_amq_user = _line.section("=", 1, 1).section(":", 2, 2);
-                configure.local_amq_passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.local_onsite_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.local_onsite_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.local_onsite_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.local_onsite_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.local_onsite_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
             }
-            else if(_line.startsWith("LOCAL_ONSITE_TOPIC") && _line.section("=",1,1) != "")
-                configure.local_onsite_topic = _line.section("=", 1, 1);
-            else if(_line.startsWith("LOCAL_PGA_TOPIC") && _line.section("=", 1, 1) != "")
-                configure.local_pga_topic = _line.section("=", 1, 1);
-            else if(_line.startsWith("LOCAL_SOH_TOPIC") && _line.section("=",1,1) != "")
-                configure.local_soh_topic = _line.section("=", 1, 1);
-            else if(_line.startsWith("KIGAM_AMQ_INFO") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("LOCAL_SOH_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
             {
-                configure.kigam_amq_ip = _line.section("=",1,1).section(":", 0, 0);
-                configure.kigam_amq_port = _line.section("=", 1, 1).section(":", 1, 1);
-                configure.kigam_amq_user = _line.section("=", 1, 1).section(":", 2, 2);
-                configure.kigam_amq_passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.local_soh_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.local_soh_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.local_soh_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.local_soh_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.local_soh_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
             }
-            else if(_line.startsWith("KIGAM_EEW_TOPIC") && _line.section("=",1,1) != "")
-                configure.kigam_eew_topic = _line.section("=", 1, 1);
-            else if(_line.startsWith("KIGAM_ONSITE_TOPIC") && _line.section("=",1,1) != "")
-                configure.kigam_onsite_topic = _line.section("=", 1, 1);
-            else if(_line.startsWith("KIGAM_SOH_TOPIC") && _line.section("=",1,1) != "")
-                configure.kigam_soh_topic = _line.section("=", 1, 1);
+            else if(_line.startsWith("LOCAL_PGA_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
+            {
+                configure.local_pga_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.local_pga_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.local_pga_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.local_pga_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.local_pga_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
+            }
+            else if(_line.startsWith("KISS_EEW_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
+            {
+                configure.kiss_eew_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.kiss_eew_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.kiss_eew_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.kiss_eew_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.kiss_eew_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
+            }
+            else if(_line.startsWith("KISS_ONSITE_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
+            {
+                configure.kiss_onsite_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.kiss_onsite_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.kiss_onsite_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.kiss_onsite_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.kiss_onsite_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
+            }
+            else if(_line.startsWith("KISS_SOH_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
+            {
+                configure.kiss_soh_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.kiss_soh_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.kiss_soh_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.kiss_soh_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.kiss_soh_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
+            }
+            else if(_line.startsWith("KISS_PGA_AMQ") && _line.section("=",1,1) != "::::" && _line.section("=",1,1) != "")
+            {
+                configure.kiss_pga_amq.ip = _line.section("=",1,1).section(":", 0, 0);
+                configure.kiss_pga_amq.port = _line.section("=", 1, 1).section(":", 1, 1);
+                configure.kiss_pga_amq.user = _line.section("=", 1, 1).section(":", 2, 2);
+                configure.kiss_pga_amq.passwd = _line.section("=", 1, 1).section(":", 3, 3);
+                configure.kiss_pga_amq.topic = _line.section("=", 1, 1).section(":", 4, 4);
+            }
             else if(_line.startsWith("ALARM_DEVICE"))
             {
                 configure.alarm_device_ip = _line.section("=", 1, 1).section(":", 0, 0);
                 configure.alarm_device_port = _line.section("=", 1, 1).section(":", 1, 1).toInt();
             }
-            //else if(_line.startsWith("SOH_ALERT") && _line.section("=",1,1) != "")
-            //{
-            //    configure.soh_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-            //    configure.soh_alert_sec = _line.section("=", 1, 1).section(":", 1, 1).toInt();
-            //}
             else if(_line.startsWith("LEVEL1") && _line.section("=",1,1) != "")
             {
                 configure.level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
@@ -1457,72 +1475,81 @@ void MainWindow::setup()
     createStaCircleOnRealTimePGAMap();
 
     // Define a consumer
-    QString kigamFailover = "failover:(tcp://" + configure.kigam_amq_ip + ":" + configure.kigam_amq_port + ")";
-
-    if(!krecveew->isRunning() && configure.kigam_eew_topic != "")
+    if(!krecveew->isRunning() && configure.kiss_eew_amq.topic != "")
     {
-        krecveew->setup(kigamFailover, configure.kigam_amq_user, configure.kigam_amq_passwd, configure.kigam_eew_topic, true, false);
+        QString failover = "failover:(tcp://" + configure.kiss_eew_amq.ip + ":" + configure.kiss_eew_amq.port + ")";
+        krecveew->setup(failover, configure.kiss_eew_amq.user, configure.kiss_eew_amq.passwd, configure.kiss_eew_amq.topic, true, false);
         connect(krecveew, SIGNAL(_rvEEWInfo(_EEWInfo)), this, SLOT(rvEEWInfo(_EEWInfo)));
         krecveew->start();
     }
 
     if(!configure.kissStaVT.isEmpty())
     {
-        if(!krecvOnsite->isRunning() && configure.kigam_onsite_topic != "")
+        if(!krecvOnsite->isRunning() && configure.kiss_onsite_amq.topic != "")
         {
-            // to do
-            kigamFailover = "failover:(tcp://172.31.100.137:61616)";
-            krecvOnsite->setup(kigamFailover, configure.kigam_amq_user, configure.kigam_amq_passwd, configure.kigam_onsite_topic, true, false, 1);
+            QString failover = "failover:(tcp://" + configure.kiss_onsite_amq.ip + ":" + configure.kiss_onsite_amq.port + ")";
+            krecvOnsite->setup(failover, configure.kiss_onsite_amq.user, configure.kiss_onsite_amq.passwd, configure.kiss_onsite_amq.topic, true, false, 1);
             connect(krecvOnsite, SIGNAL(_rvOnsiteInfo(_KGOnSite_Info_t)), this, SLOT(rvOnsiteInfo(_KGOnSite_Info_t)));
             krecvOnsite->start();
         }
 
-        if(!krecvSoh->isRunning() && configure.kigam_soh_topic != "")
+        if(!krecvSoh->isRunning() && configure.kiss_soh_amq.topic != "")
         {
-            krecvSoh->setup(kigamFailover, configure.kigam_amq_user, configure.kigam_amq_passwd, configure.kigam_soh_topic, true, false);
+            QString failover = "failover:(tcp://" + configure.kiss_soh_amq.ip + ":" + configure.kiss_soh_amq.port + ")";
+            krecvSoh->setup(failover, configure.kiss_soh_amq.user, configure.kiss_soh_amq.passwd, configure.kiss_soh_amq.topic, true, false);
             connect(krecvSoh, SIGNAL(_rvSOHInfo(_KGOnSite_SOH_t, int, int)), this, SLOT(rvSOHInfo(_KGOnSite_SOH_t, int, int)));
             krecvSoh->start();
         }
 
         // RealTime PGA
-        if(!krealTimePGA->isRunning())
+        if(!krecvPGA->isRunning() && configure.kiss_pga_amq.topic != "")
         {
-            krealTimePGA->setup(kigamFailover, configure.kigam_amq_user, configure.kigam_amq_passwd, "KGKIIS.KISS.QSCDBLOCK", true, false);
-            connect(krealTimePGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
-            krealTimePGA->start();
+            QString failover = "failover:(tcp://" + configure.kiss_pga_amq.ip + ":" + configure.kiss_pga_amq.port + ")";
+            krecvPGA->setup(failover, configure.kiss_pga_amq.user, configure.kiss_pga_amq.passwd, configure.kiss_pga_amq.topic, true, false);
+            connect(krecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
+            krecvPGA->start();
+        }
+        else if(configure.kiss_pga_amq.topic == "")
+        {
+            ui->mainTW->removeTab(2);
         }
 
-        krealTimePGA->updateStation(configure.kissStaVT);
+        krecvPGA->updateStation(configure.kissStaVT);
         krecvOnsite->updateStation(configure.kissStaVT);
         krecvSoh->updateStation(configure.kissStaVT, 1);
     }
+    else
+        ui->mainTW->removeTab(2);
 
     if(!configure.localStaVT.isEmpty())
     {
         // Define a consumer
-        QString localFailover = "failover:(tcp://" + configure.local_amq_ip + ":" + configure.local_amq_port + ")";
-
-        if(!lrecvOnsite->isRunning() && configure.local_onsite_topic != "")
+        if(!lrecvOnsite->isRunning() && configure.local_onsite_amq.topic != "")
         {
-            lrecvOnsite->setup(localFailover, configure.local_amq_user, configure.local_amq_passwd, configure.local_onsite_topic, true, false, 0);
+            QString failover = "failover:(tcp://" + configure.local_onsite_amq.ip + ":" + configure.local_onsite_amq.port + ")";
+            lrecvOnsite->setup(failover, configure.local_onsite_amq.user, configure.local_onsite_amq.passwd, configure.local_onsite_amq.topic, true, false, 0);
             connect(lrecvOnsite, SIGNAL(_rvOnsiteInfo(_KGOnSite_Info_t)), this, SLOT(rvOnsiteInfo(_KGOnSite_Info_t)));
             lrecvOnsite->start();
         }
 
-        if(!lrecvPGA->isRunning() && configure.local_pga_topic != "")
+        if(!lrecvPGA->isRunning() && configure.local_pga_amq.topic != "")
         {
-            lrecvPGA->setup(localFailover, configure.local_amq_user, configure.local_amq_passwd, configure.local_pga_topic, true, false);
-            connect(lrecvPGA, SIGNAL(_rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)), this, SLOT(rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)));
+            QString failover = "failover:(tcp://" + configure.local_pga_amq.ip + ":" + configure.local_pga_amq.port + ")";
+            lrecvPGA->setup(failover, configure.local_pga_amq.user, configure.local_pga_amq.passwd, configure.local_pga_amq.topic, true, false);
+            connect(krecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
+            //connect(lrecvPGA, SIGNAL(_rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)), this, SLOT(rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)));
             lrecvPGA->start();
         }
 
-        if(!lrecvSoh->isRunning() && configure.local_soh_topic != "")
+        if(!lrecvSoh->isRunning() && configure.local_soh_amq.topic != "")
         {
-            lrecvSoh->setup(localFailover, configure.local_amq_user, configure.local_amq_passwd, configure.local_soh_topic, true, false);
+            QString failover = "failover:(tcp://" + configure.local_soh_amq.ip + ":" + configure.local_soh_amq.port + ")";
+            lrecvSoh->setup(failover, configure.local_soh_amq.user, configure.local_soh_amq.passwd, configure.local_soh_amq.topic, true, false);
             connect(lrecvSoh, SIGNAL(_rvSOHInfo(_KGOnSite_SOH_t, int, int)), this, SLOT(rvSOHInfo(_KGOnSite_SOH_t, int, int)));
             lrecvSoh->start();
         }
 
+        lrecvPGA->updateStation(configure.localStaVT);
         lrecvOnsite->updateStation(configure.localStaVT);
         lrecvSoh->updateStation(configure.localStaVT, 0);
     }

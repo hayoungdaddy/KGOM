@@ -572,7 +572,7 @@ void RecvRealTimePGAMessage::run()
                 int index = 0;
                 QString sc, sc2;
 
-                sc2 = QString(sta) + "/" + QString(net);
+                sc2 = QString(sta) + "/" + QString(net).left(2);
 
                 for(int j=0;j<stationVT.count();j++)
                 {
@@ -588,20 +588,10 @@ void RecvRealTimePGAMessage::run()
 
                 if(isMyStation == true)
                 {
+                    //qDebug() << qfmm.net << qfmm.sta;
                     SwapInt(&QSCDBlock[i].time);    // epoch time (GMT)
-                    //SwapFloat(&QSCDBlock[i].ZMax);
-                    //SwapFloat(&QSCDBlock[i].NMax);
-                    //SwapFloat(&QSCDBlock[i].EMax);
                     SwapFloat(&QSCDBlock[i].HPGA);
-                    //SwapFloat(&QSCDBlock[i].TPGA);
-
-                    //qfmm.pga[0] = QSCDBlock[i].ZMax;
-                    //qfmm.pga[1] = QSCDBlock[i].NMax;
-                    //qfmm.pga[2] = QSCDBlock[i].EMax;
-                    //qfmm.pga[3] = QSCDBlock[i].HPGA;
-                    //qfmm.pga[4] = QSCDBlock[i].TPGA;
                     qfmm.hpga = QSCDBlock[i].HPGA;
-
                     mmap.insert(QSCDBlock[i].time, qfmm);
                 }
             }

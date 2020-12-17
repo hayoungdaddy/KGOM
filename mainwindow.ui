@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1500</width>
-    <height>1130</height>
+    <height>1000</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">
@@ -269,7 +269,7 @@ QWidget { /* sets background color for every widget */
                <x>0</x>
                <y>0</y>
                <width>448</width>
-               <height>870</height>
+               <height>746</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
@@ -631,7 +631,7 @@ QWidget { /* sets background color for every widget */
                  <x>0</x>
                  <y>0</y>
                  <width>460</width>
-                 <height>269</height>
+                 <height>207</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -2900,7 +2900,7 @@ color: white</string>
      <x>0</x>
      <y>0</y>
      <width>1500</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="styleSheet">

@@ -87,5 +87,5 @@ RESOURCES += \
     KGOM.qrc
 
 LIBS += -lactivemq-cpp
-INCLUDEPATH += /usr/local/include/activemq-cpp-3.9.4
+INCLUDEPATH += /usr/local/include/activemq-cpp-3.9.5
 INCLUDEPATH += /usr/local/apr/include/apr-1/
