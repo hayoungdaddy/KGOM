@@ -12,14 +12,15 @@ WriteLog::~WriteLog()
 
 void WriteLog::write(QString dir, QString str)
 {
-    QDateTime now = QDateTime::currentDateTimeUtc();
-    now = convertKST(now);
-    QFile file(dir + "/KGOM." + now.toString("yyyyMMdd") + ".log");
+    QDateTime nowUTC = QDateTime::currentDateTimeUtc();
+    QDateTime nowKST;
+    nowKST = convertKST(nowUTC);
+    QFile file(dir + "/KGOM." + nowKST.toString("yyyyMMdd") + ".log");
     if(file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
         QTextStream stream( &file );
 
-        stream << now.toString("[hh:mm:ss] ") << str << "\n";
+        stream << nowKST.toString("[hh:mm:ss] ") << str << "\n";
 
         file.close();
     }

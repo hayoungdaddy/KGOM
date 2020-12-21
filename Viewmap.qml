@@ -39,7 +39,7 @@ Rectangle {
         //PluginParameter { name: "osm.mapping.providersrepository.address"; value: "http://localhost/osm_tile/" }
         //PluginParameter { name: "osm.mapping.custom.host"; value: "http://localhost/osm_tile/" }
         PluginParameter { name: "osm.mapping.highdpi_tiles"; value: true }
-        //PluginParameter { name: "osm.mapping.cache.directory"; value: "/.KGOM/map_data" }
+        PluginParameter { name: "osm.mapping.cache.directory"; value: "/.KGOM/cache" }
         PluginParameter { name: "osm.mapping.offline.directory"; value: "/.KGOM/map_data" }
     }
 
@@ -215,6 +215,11 @@ Rectangle {
         staCircle[index].circleOpacity = opacity;
     }
 
+    function refreshMyPositionMarker()
+    {
+        myPositionMarker.widthi = 45;
+    }
+
     function addEventCircle(lat, longi, colors, id)
     {
         eventMarker[id] = Qt.createQmlObject('EventMarker { }', map);
@@ -373,6 +378,11 @@ Rectangle {
     function moveMyPositionMarker(lat, longi)
     {
         myPositionMarker.coordinate = QtPositioning.coordinate(lat, longi);
+        return true;
+    }
+
+    function refreshMap()
+    {
         return true;
     }
 

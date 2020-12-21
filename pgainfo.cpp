@@ -34,18 +34,23 @@ void PgaInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>
         staNameLB->setAlignment(Qt::AlignCenter);
         pgaLB->setText(pgaS + " gal");
         pgaLB->setAlignment(Qt::AlignCenter);
-        QDateTime t; t.setTime_t(pgaInfos.at(i).time);
-        t.setTimeSpec(Qt::UTC);
-        t = convertKST(t);
-        timeLB->setText(t.toString("hh:mm:ss"));
+        QDateTime tUTC, tKST;
+        tUTC.setTimeSpec(Qt::UTC);
+        tUTC.setTime_t(pgaInfos.at(i).time);
+
+        tKST = convertKST(tUTC);
+        timeLB->setText(tKST.toString("hh:mm:ss"));
         timeLB->setAlignment(Qt::AlignCenter);
         ui->bodyLO->addWidget(staNameLB, i, 0);
         ui->bodyLO->addWidget(pgaLB, i, 1);
         ui->bodyLO->addWidget(timeLB, i, 2);
     }
-    QDateTime t; t.setTime_t(eTime);
-    t.setTimeSpec(Qt::UTC);
-    t = convertKST(t);
-    ui->timeLB->setText(t.toString("yyyy-MM-dd hh:mm:ss"));
+
+    QDateTime tUTC, tKST;
+    tUTC.setTimeSpec(Qt::UTC);
+    tUTC.setTime_t(eTime);
+
+    tKST = convertKST(tUTC);
+    ui->timeLB->setText(tKST.toString("yyyy-MM-dd hh:mm:ss"));
     ui->scnlLB->setText(codec->toUnicode("최대지반가속도(") + chan + ") 정보");
 }

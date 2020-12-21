@@ -60,7 +60,7 @@ static QString find_loc_program = "findLocC";
 
 static QDateTime convertKST(QDateTime oriTime)
 {
-    oriTime.setTimeSpec(Qt::UTC);
+    //oriTime.setTimeSpec(Qt::UTC);
     oriTime = oriTime.addSecs(3600 * 9);
     return oriTime;
 }
@@ -358,7 +358,7 @@ typedef struct _configure
     double s_vel;
 } _CONFIGURE;
 
-#define DATA_TIME_DIFF 5
+#define DATA_TIME_DIFF 3
 #define MAX_QSCD_CNT 100
 #define QSCD_LEN 120
 

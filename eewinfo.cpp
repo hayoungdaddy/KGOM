@@ -23,16 +23,13 @@ EewInfo::~EewInfo()
 
 void EewInfo::setup(_EEWInfo eewInfo, QString hd, double myLat, double myLon)
 {
-    QDateTime t; t.setTime_t(eewInfo.origin_time);
-    t.setTimeSpec(Qt::UTC);
-    t = convertKST(t);
-    ui->timeLB->setText(t.toString("yyyy-MM-dd hh:mm:ss"));
+    QDateTime tUTC, tKST;
+    tUTC.setTimeSpec(Qt::UTC);
+    tUTC.setTime_t(eewInfo.origin_time);
 
-    /*
-    ui->latLB->setText("Lat.\n" + QString::number(eewInfo.latitude, 'f', 4));
-    ui->longLB->setText("Lon.\n" + QString::number(eewInfo.longitude, 'f', 4));
-    ui->hdLB->setText("Home Dist.\n" + hd + " Km");
-    */
+    tKST = convertKST(tUTC);
+    ui->timeLB->setText(tKST.toString("yyyy-MM-dd hh:mm:ss"));
+
     ui->latLB->setText(QString::number(eewInfo.latitude, 'f', 4));
     ui->lonLB->setText(QString::number(eewInfo.longitude, 'f', 4));
     ui->hdLB->setText(hd + " Km");

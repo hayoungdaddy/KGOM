@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">

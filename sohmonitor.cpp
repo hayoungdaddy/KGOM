@@ -32,22 +32,22 @@ void SohMonitor::setup(_STATION sta)
 
 void SohMonitor::update(_KGOnSite_SOH_t soh)
 {
-    QDateTime ldt, lst;
-    ldt.setTimeSpec(Qt::UTC);
-    ldt.setTime_t(soh.dtime);
-    ldt = convertKST(ldt);
-    lst = QDateTime::currentDateTimeUtc();
-    lst = convertKST(lst);
+    QDateTime ldtUTC, ldtKST, lstUTC, lstKST;
+    ldtUTC.setTimeSpec(Qt::UTC);
+    ldtUTC.setTime_t(soh.dtime);
+    ldtKST = convertKST(ldtUTC);
+    lstUTC = QDateTime::currentDateTimeUtc();
+    lstKST = convertKST(lstUTC);
 
-    ui->lastDataTimeLB->setText(ldt.toString("yyyy-MM-dd hh:mm:ss"));
-    ui->lastSohTimeLB->setText(lst.toString("yyyy-MM-dd hh:mm:ss"));
+    ui->lastDataTimeLB->setText(ldtKST.toString("yyyy-MM-dd hh:mm:ss"));
+    ui->lastSohTimeLB->setText(lstKST.toString("yyyy-MM-dd hh:mm:ss"));
 }
 
 void SohMonitor::doRepeatWork()
 {
-    QDateTime now = QDateTime::currentDateTimeUtc();
-    now.setTimeSpec(Qt::UTC);
-    now = convertKST(now);
+    QDateTime nowUTC = QDateTime::currentDateTimeUtc();
+    QDateTime nowKST;
+    nowKST = convertKST(nowUTC);
 
     QDateTime ldt, lst;
     ldt.setTimeSpec(Qt::UTC);
@@ -59,8 +59,8 @@ void SohMonitor::doRepeatWork()
     int ldt_status = 0, lst_status = 0, totalStatus = 0;
     int ldt_diff, lst_diff;
 
-    ldt_diff = now.toTime_t() - ldt.toTime_t();
-    lst_diff = now.toTime_t() - lst.toTime_t();
+    ldt_diff = nowUTC.toTime_t() - ldt.toTime_t();
+    lst_diff = nowUTC.toTime_t() - lst.toTime_t();
 
     if(ldt_diff <= sohValue[1])
     {

@@ -135,21 +135,39 @@ void PgaDetailTable::drawPGAChart(QString path, QString net, QString sta, double
     else
         pgaSeries->setName(net + "/" + sta + "(" + QString::number(dist, 'f', 2) + "Km)");
 
+    QDateTime local(QDateTime::currentDateTime());
+    QDateTime UTC(QDateTime::currentDateTimeUtc());
+    QDateTime dt(UTC.date(), UTC.time(), Qt::LocalTime);
+
+    /*
+    qDebug() << local.secsTo(UTC);
+    qDebug() << local.secsTo(dt);
+    qDebug() << dt.secsTo(local);
+    */
+
     QFile pgaFile(path + "/" + net + "_" + sta);
+    if(!pgaFile.exists())
+        pgaFile.setFileName(path + "/" + net + sta + "_" + sta);
+
     if(pgaFile.open(QIODevice::ReadOnly))
     {
         QTextStream stream(&pgaFile);
         QString line, _line;
 
-        QDateTime dataTime;
+        QDateTime dataTimeUTC;
         while(!stream.atEnd())
         {
             line = stream.readLine();
             _line = line.simplified();
 
-            dataTime.setTime_t(_line.section(" ", 0, 0).toInt());
-            dataTime = convertKST(dataTime);
-            pgaSeries->append(dataTime.toMSecsSinceEpoch(), _line.section(" ", 1, 1).toDouble());
+            dataTimeUTC.setTime_t(_line.section(" ", 0, 0).toInt());
+            qint64 ttt = dataTimeUTC.toMSecsSinceEpoch();
+
+            if(dt.secsTo(local) == 0) // if the system timezone is UTC
+            {
+                ttt = ttt + (3600000 * 9);
+            }
+            pgaSeries->append(ttt, _line.section(" ", 1, 1).toDouble());
         }
         pgaFile.close();
     }

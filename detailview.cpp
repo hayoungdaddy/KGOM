@@ -49,11 +49,11 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
         }
     }
 
-    QDateTime dt;
-    dt.setTimeSpec(Qt::UTC);
-    dt.setTime_t(summaryInfo.origin_time);
-    dt = convertKST(dt);
-    ui->timeLB->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
+    QDateTime dtUTC, dtKST;
+    dtUTC.setTimeSpec(Qt::UTC);
+    dtUTC.setTime_t(summaryInfo.origin_time);
+    dtKST = convertKST(dtUTC);
+    ui->timeLB->setText(dtKST.toString("yyyy-MM-dd hh:mm:ss"));
     QProcess process;
     QString cmd = homeDir + "/bin/" + find_loc_program + " " + QString::number(summaryInfo.latitude, 'f', 4) + " " + QString::number(summaryInfo.longitude, 'f', 4);
     process.start(cmd);
@@ -141,11 +141,11 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
 
     if(eewInfos.isEmpty() && onsiteInfos.isEmpty())
     {
-        QDateTime dt;
-        dt.setTimeSpec(Qt::UTC);
-        dt.setTime_t(pgaInfos.at(0).time);
-        dt = convertKST(dt);
-        ui->timeLB->setText(dt.toString("yyyy-MM-dd hh:mm:ss"));
+        QDateTime dtUTC, dtKST;
+        dtUTC.setTimeSpec(Qt::UTC);
+        dtUTC.setTime_t(pgaInfos.at(0).time);
+        dtKST = convertKST(dtUTC);
+        ui->timeLB->setText(dtKST.toString("yyyy-MM-dd hh:mm:ss"));
         QProcess process;
         QString cmd = homeDir + "/bin/" + find_loc_program + " " + QString::number(pgaInfos.at(0).lat, 'f', 4) + " " + QString::number(pgaInfos.at(0).lon, 'f', 4);
         process.start(cmd);

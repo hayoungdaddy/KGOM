@@ -30,6 +30,8 @@
 #include <QHBoxLayout>
 #include <QMutex>
 
+#include <QQmlApplicationEngine>
+
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlQueryModel>
 #include <QtSql/QSqlRecord>
@@ -51,6 +53,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void resizeEvent(QResizeEvent *);
 
 private:
     Ui::MainWindow *ui;
@@ -136,7 +139,8 @@ private:
     // About event
     int eventMode;
     double maxMag;
-    QDateTime eventStartTime;
+    QDateTime eventStartTimeUTC;
+    QDateTime eventStartTimeKST;
     QTimer *blinkTimer;
     ControlAlarm *controlAlarm;
     int getLastEvid();

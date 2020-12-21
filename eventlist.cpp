@@ -47,12 +47,13 @@ EventList::EventList(int mode, _EEWInfo eewInfo, QString hd, QString homeDir, QW
 
     ui->magLB->setPixmap(pm);
 
-    QDateTime et;
-    et.setTime_t(eewInfo.origin_time);
-    et.setTimeSpec(Qt::UTC);
-    et = convertKST(et);
+    QDateTime etUTC;
+    QDateTime etKST;
+    etUTC.setTimeSpec(Qt::UTC);
+    etUTC.setTime_t(eewInfo.origin_time);
+    etKST = convertKST(etUTC);
 
-    ui->timeLB->setText(et.toString("yyyy-MM-dd hh:mm:ss (KST)"));
+    ui->timeLB->setText(etKST.toString("yyyy-MM-dd hh:mm:ss (KST)"));
 
     QProcess process;
     QString cmd = homeDir + "/bin/" + find_loc_program + " " + QString::number(eewInfo.latitude, 'f', 4) + " " + QString::number(eewInfo.longitude, 'f', 4);

@@ -114,6 +114,7 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     // Load a osm map & Setup a Map for EVENTS tab
     QQuickView *eventsView = new QQuickView();
     eMapContainer = QWidget::createWindowContainer(eventsView, this);
+    //eventsView->setResizeMode(QQuickView::SizeViewToRootObject);
     eventsView->setResizeMode(QQuickView::SizeRootObjectToView);
     eMapContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     eMapContainer->setFocusPolicy(Qt::TabFocus);
@@ -219,7 +220,7 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     if(configure.alarm_device_ip != "")
         controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
 
-    ui->replayPB->hide();
+    //ui->replayPB->hide();
     connect(ui->replayPB, SIGNAL(clicked(bool)), this, SLOT(eventReplayPBClicked()));
 }
 
@@ -300,6 +301,14 @@ void MainWindow::setVisible(bool visible)
     maximizeAction->setEnabled(!isMaximized());
     restoreAction->setEnabled(isMaximized() || !visible);
     QMainWindow::setVisible(visible);
+}
+
+void MainWindow::resizeEvent(QResizeEvent *)
+{
+    //qDebug() << eMapContainer->width() << eMapContainer->height();
+    //eMapContainer->adjustSize();
+
+    //QMetaObject::invokeMethod(this->eRootObj, "refreshMyPositionMarker", Q_RETURN_ARG(QVariant, eReturnedValue));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -422,12 +431,13 @@ void MainWindow::aboutthisActionTriggered()
 void MainWindow::doRepeatWork()
 {
     // show system time
-    QDateTime time = QDateTime::currentDateTimeUtc();
+    //QDateTime time = QDateTime::currentDateTimeUtc();
     QDateTime timeUTC = QDateTime::currentDateTimeUtc();
-    QDateTime dataTime = time.addSecs(- DATA_TIME_DIFF);
-    time = convertKST(time);
+    QDateTime dataTimeUTC = timeUTC.addSecs(- DATA_TIME_DIFF);
+    QDateTime timeKST;
+    timeKST = convertKST(timeUTC);
 
-    QString text = time.toString("hh:mm:ss");
+    QString text = timeKST.toString("hh:mm:ss");
     sysLN->display(text);
 
     if(text.right(5).startsWith("00:00") || text.right(5).startsWith("30:00"))
@@ -435,7 +445,7 @@ void MainWindow::doRepeatWork()
 
     if(eventMode == 1)
     {
-        if(eventStartTime.toTime_t() + EVENT_DURATION < time.toTime_t())
+        if(eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t())
         {
             eventMode = 0;
             maxMag = 0;
@@ -490,7 +500,7 @@ void MainWindow::doRepeatWork()
     // for RealTime PGA
     // read PGA
     mutex.lock();
-    QList<_QSCD_FOR_MULTIMAP> pgaList = pgaHouse.values(dataTime.toTime_t());
+    QList<_QSCD_FOR_MULTIMAP> pgaList = pgaHouse.values(dataTimeUTC.toTime_t());
     mutex.unlock();
 
     resetStaCircleOnMap();
@@ -499,14 +509,15 @@ void MainWindow::doRepeatWork()
     for(int j=0;j<configure.kissStaVT.count();j++)
     {
         ui->pgaTW->setItem(j, 2, new QTableWidgetItem("None"));
+        ui->pgaTW->item(j, 2)->setTextAlignment(Qt::AlignCenter);
         ui->pgaTW->item(j, 2)->setTextColor(Qt::black);
         ui->pgaTW->item(j, 2)->setBackgroundColor(Qt::white);
     }
 
     if(pgaList.size() != 0)
     {
-        QDateTime dataTimeKST = dataTime;
-        dataTimeKST = convertKST(dataTimeKST);
+        QDateTime dataTimeKST = convertKST(dataTimeUTC);
+        //dataTimeKST = convertKST(dataTimeKST);
         ui->dataTimeLN->display(dataTimeKST.toString("hh:mm:ss"));
 
         // display
@@ -543,7 +554,7 @@ void MainWindow::doRepeatWork()
                         int evid;
                         evid = getLastEvid();
                         QString path, fileName;
-                        path = configure.KGOM_HOME + "/data/PGA/" + dataTime.toString("yyyy/MM/") + QString::number(evid) + "/";
+                        path = configure.KGOM_HOME + "/data/PGA/" + dataTimeUTC.toString("yyyy/MM/") + QString::number(evid) + "/";
                         fileName = path + "/" + pgaList.at(i).net + "_" + pgaList.at(i).sta;
                         QDir evtFilePathD(path);
                         if(!evtFilePathD.exists())
@@ -552,14 +563,14 @@ void MainWindow::doRepeatWork()
                         QFile pgaFile(fileName);
                         pgaFile.open(QIODevice::WriteOnly | QIODevice::Append);
                         QTextStream out(&pgaFile);
-                        out << QString::number(dataTime.toTime_t()) << " " << QString::number(pgaList.at(i).hpga, 'f', 4) << "\n";
+                        out << QString::number(dataTimeUTC.toTime_t()) << " " << QString::number(pgaList.at(i).hpga, 'f', 4) << "\n";
                         pgaFile.close();
 
                         if(configure.kissStaVT.at(j).maxPGA < pgaList.at(i).hpga)
                         {
                             _STATION sta = configure.kissStaVT.at(j);
                             sta.maxPGA = pgaList.at(i).hpga;
-                            sta.maxPGATime = dataTime.toTime_t();
+                            sta.maxPGATime = dataTimeUTC.toTime_t();
                             configure.kissStaVT.replace(j, sta);
                         }
                     }
@@ -585,7 +596,7 @@ void MainWindow::doRepeatWork()
     {
         mutex.lock();
         QMultiMap<int, _QSCD_FOR_MULTIMAP>::iterator untilIter;
-        untilIter = pgaHouse.lowerBound(dataTime.toTime_t() - 10);
+        untilIter = pgaHouse.lowerBound(dataTimeUTC.toTime_t() - 10);
 
         for(iter = pgaHouse.begin() ; untilIter != iter;)
         {
@@ -690,7 +701,7 @@ void MainWindow::showSearchWindow()
 void MainWindow::setDiffTime()
 {
     QDateTime now = QDateTime::currentDateTimeUtc();
-    now.setTimeSpec(Qt::UTC);
+    //now.setTimeSpec(Qt::UTC);
     now = convertKST(now);
 
     if(ui->timeLB->text() != "")
@@ -698,7 +709,7 @@ void MainWindow::setDiffTime()
         QString temp = ui->timeLB->text(); //"yyyy-MM-dd hh:mm:ss KST"
         temp = temp.left(19);
         QDateTime tt = QDateTime::fromString(temp, "yyyy-MM-dd hh:mm:ss");
-        tt.setTimeSpec(Qt::UTC);
+        //tt.setTimeSpec(Qt::UTC);
 
         int diffSec;
 
@@ -1162,11 +1173,13 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
 
     if(eewInfos.count() != 0)
     {
-        QDateTime ttime;
-        ttime.setTime_t(eewInfos.first().origin_time);
-        ttime.setTimeSpec(Qt::UTC);
-        ttime = convertKST(ttime);
-        ui->timeLB->setText(ttime.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
+        QDateTime ttimeUTC;
+        QDateTime ttimeKST;
+        ttimeUTC.setTimeSpec(Qt::UTC);
+        ttimeUTC.setTime_t(eewInfos.first().origin_time);
+
+        ttimeKST = convertKST(ttimeUTC);
+        ui->timeLB->setText(ttimeKST.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
 
         double dist = getDistance(eewInfos.first().latitude, eewInfos.first().longitude, configure.myposition_lat, configure.myposition_lon);
 
@@ -1219,11 +1232,12 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         {
             if(i == 0 && eewInfos.count() == 0)
             {
-                QDateTime ttime;
-                ttime.setTime_t(tempInfos.at(i).ttime);
-                ttime.setTimeSpec(Qt::UTC);
-                ttime = convertKST(ttime);
-                ui->timeLB->setText(ttime.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
+                QDateTime ttimeUTC, ttimeKST;
+                ttimeUTC.setTimeSpec(Qt::UTC);
+                ttimeUTC.setTime_t(tempInfos.at(i).ttime);
+
+                ttimeKST = convertKST(ttimeUTC);
+                ui->timeLB->setText(ttimeKST.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
             }
 
             OnsiteInfo *onsiteinfo = new OnsiteInfo;
@@ -1276,14 +1290,6 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         PgaInfo *pgainfo = new PgaInfo;
         pgainfo->setup(pgaChannel, pgaTime, pgaInfos);
         ui->alertListVLO->addWidget(pgainfo);
-
-        /*
-        QDateTime ttime;
-        ttime.setTime_t(pgaTime);
-        ttime.setTimeSpec(Qt::UTC);
-        ttime = convertKST(ttime);
-        ui->timeLB->setText(ttime.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
-        */
 
         for(int i=0;i<pgaInfos.count();i++)
         {
@@ -1536,7 +1542,7 @@ void MainWindow::setup()
         {
             QString failover = "failover:(tcp://" + configure.local_pga_amq.ip + ":" + configure.local_pga_amq.port + ")";
             lrecvPGA->setup(failover, configure.local_pga_amq.user, configure.local_pga_amq.passwd, configure.local_pga_amq.topic, true, false);
-            connect(krecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
+            connect(lrecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
             //connect(lrecvPGA, SIGNAL(_rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)), this, SLOT(rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)));
             lrecvPGA->start();
         }
@@ -1912,8 +1918,8 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
                 QDate::currentDate().toString("yyyyMMdd") + "')";
         this->eventModel->setQuery(query);
 
-        eventStartTime = QDateTime::currentDateTimeUtc();
-        eventStartTime = convertKST(eventStartTime);
+        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeKST = convertKST(eventStartTimeUTC);
 
         blinkTimer->start(1000);
         eventMode = 1;
@@ -1924,8 +1930,8 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
         log->write(configure.KGOM_HOME + "/logs/", "Event ID: " + QString::number(evid));
-        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTime.toString("yyyy/MM/dd hh:mm:ss"));
-        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTime.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
         restoreAction->triggered();
         this->showMaximized();
@@ -1996,8 +2002,8 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
                 QDate::currentDate().toString("yyyyMMdd") + "')";
         this->eventModel->setQuery(query);
 
-        eventStartTime = QDateTime::currentDateTimeUtc();
-        eventStartTime = convertKST(eventStartTime);
+        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeKST = convertKST(eventStartTimeUTC);
 
         blinkTimer->start(1000);
         eventMode = 1;
@@ -2006,8 +2012,8 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
         log->write(configure.KGOM_HOME + "/logs/", "Event ID: " + QString::number(evid));
-        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTime.toString("yyyy/MM/dd hh:mm:ss"));
-        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTime.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
         this->showMaximized();
         this->activateWindow();
@@ -2085,13 +2091,13 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
 
     if(eventMode == 0)
     {
-        eventStartTime = QDateTime::currentDateTimeUtc();
-        eventStartTime = convertKST(eventStartTime);
+        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeKST = convertKST(eventStartTimeUTC);
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
         log->write(configure.KGOM_HOME + "/logs/", "Event ID: " + QString::number(evid));
-        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTime.toString("yyyy/MM/dd hh:mm:ss"));
-        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTime.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
+        log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
         blinkTimer->start(1000);
         eventMode = 1;
