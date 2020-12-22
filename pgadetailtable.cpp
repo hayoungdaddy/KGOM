@@ -21,20 +21,20 @@ void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKI
     for(int i=0;i<pgaInfos.count();i++)
     {
         ui->pgaTW->setRowCount(ui->pgaTW->rowCount()+1);
-        ui->pgaTW->setItem(i, 0, new QTableWidgetItem(QString::number(pgaInfos.at(i).version)));
-        ui->pgaTW->setItem(i, 1, new QTableWidgetItem(QString(pgaInfos.at(i).msg_type)));
-        ui->pgaTW->setItem(i, 2, new QTableWidgetItem(QString(pgaInfos.at(i).sta)));
-        ui->pgaTW->setItem(i, 3, new QTableWidgetItem(QString(pgaInfos.at(i).chan)));
-        ui->pgaTW->setItem(i, 4, new QTableWidgetItem(QString(pgaInfos.at(i).net)));
-        ui->pgaTW->setItem(i, 5, new QTableWidgetItem(QString(pgaInfos.at(i).loc)));
-        ui->pgaTW->setItem(i, 6, new QTableWidgetItem(QString::number(pgaInfos.at(i).lat, 'f', 4)));
-        ui->pgaTW->setItem(i, 7, new QTableWidgetItem(QString::number(pgaInfos.at(i).lon, 'f', 4)));
-        ui->pgaTW->setItem(i, 8, new QTableWidgetItem(QString::number(pgaInfos.at(i).time, 'f', 0)));
-        ui->pgaTW->setItem(i, 9, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxZ, 'f', 4)));
-        ui->pgaTW->setItem(i, 10, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxN, 'f', 4)));
-        ui->pgaTW->setItem(i, 11, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxE, 'f', 4)));
-        ui->pgaTW->setItem(i, 12, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxH, 'f', 4)));
-        ui->pgaTW->setItem(i, 13, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxT, 'f', 4)));
+        //ui->pgaTW->setItem(i, 0, new QTableWidgetItem(QString::number(pgaInfos.at(i).version)));
+        //ui->pgaTW->setItem(i, 1, new QTableWidgetItem(QString(pgaInfos.at(i).msg_type)));
+        ui->pgaTW->setItem(i, 1, new QTableWidgetItem(QString(pgaInfos.at(i).sta)));
+        ui->pgaTW->setItem(i, 2, new QTableWidgetItem(QString(pgaInfos.at(i).chan)));
+        ui->pgaTW->setItem(i, 0, new QTableWidgetItem(QString(pgaInfos.at(i).net)));
+        //ui->pgaTW->setItem(i, 5, new QTableWidgetItem(QString(pgaInfos.at(i).loc)));
+        ui->pgaTW->setItem(i, 3, new QTableWidgetItem(QString::number(pgaInfos.at(i).lat, 'f', 4)));
+        ui->pgaTW->setItem(i, 4, new QTableWidgetItem(QString::number(pgaInfos.at(i).lon, 'f', 4)));
+        ui->pgaTW->setItem(i, 5, new QTableWidgetItem(QString::number(pgaInfos.at(i).time, 'f', 0)));
+        //ui->pgaTW->setItem(i, 9, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxZ, 'f', 4)));
+        //ui->pgaTW->setItem(i, 10, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxN, 'f', 4)));
+        //ui->pgaTW->setItem(i, 11, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxE, 'f', 4)));
+        ui->pgaTW->setItem(i, 6, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxH, 'f', 4)));
+        //ui->pgaTW->setItem(i, 13, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxT, 'f', 4)));
     }
 
     for(int i=0;i<ui->pgaTW->rowCount();i++)

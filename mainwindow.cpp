@@ -662,8 +662,11 @@ void MainWindow::blinkingWindow()
         ui->mainTW->setStyleSheet(style);
         blinkCount = 1;
 
-        QString cmd = "play "  + configure.KGOM_HOME + "/bin/alert.oga &> /dev/null &";
-        system(cmd.toLatin1().constData());
+        if(remainSecSRelative >= 0)
+        {
+            QString cmd = "play "  + configure.KGOM_HOME + "/bin/alert.oga &> /dev/null &";
+            system(cmd.toLatin1().constData());
+        }
     }
     else if(blinkCount == 1)
     {
@@ -700,9 +703,19 @@ void MainWindow::showSearchWindow()
 
 void MainWindow::setDiffTime()
 {
-    QDateTime now = QDateTime::currentDateTimeUtc();
-    //now.setTimeSpec(Qt::UTC);
-    now = convertKST(now);
+    QDateTime local(QDateTime::currentDateTime());
+    QDateTime UTC(QDateTime::currentDateTimeUtc());
+    QDateTime dt(UTC.date(), UTC.time(), Qt::LocalTime);
+
+    QDateTime now;
+
+    if(dt.secsTo(local) == 0)
+    {
+        now = UTC;
+        now = convertKST(now);
+    }
+    else
+        now = local;
 
     if(ui->timeLB->text() != "")
     {

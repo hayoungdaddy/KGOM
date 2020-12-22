@@ -78,6 +78,9 @@ QTableView::item {
 } </string>
      </property>
      <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
      <property name="alternatingRowColors">
@@ -86,8 +89,14 @@ QTableView::item {
      <attribute name="horizontalHeaderDefaultSectionSize">
       <number>150</number>
      </attribute>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
      <attribute name="verticalHeaderVisible">
       <bool>false</bool>
+     </attribute>
+     <attribute name="verticalHeaderMinimumSectionSize">
+      <number>30</number>
      </attribute>
      <attribute name="verticalHeaderDefaultSectionSize">
       <number>30</number>
@@ -95,80 +104,42 @@ QTableView::item {
      <attribute name="verticalHeaderHighlightSections">
       <bool>false</bool>
      </attribute>
-     <attribute name="verticalHeaderMinimumSectionSize">
-      <number>30</number>
-     </attribute>
      <attribute name="verticalHeaderStretchLastSection">
       <bool>true</bool>
      </attribute>
      <column>
       <property name="text">
-       <string>version</string>
+       <string>Network</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>msg_type</string>
+       <string>Station</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>sta</string>
+       <string>Channel</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>chan</string>
+       <string>Latitude</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>net</string>
+       <string>Longitude</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>loc</string>
+       <string>Max. PGA Time</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>lat</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>lon</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>time</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>maxZ</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>maxN</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>maxE</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>maxH</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>maxT</string>
+       <string>Max. PGA (Horizontal)</string>
       </property>
      </column>
     </widget>

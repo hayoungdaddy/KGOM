@@ -60,7 +60,7 @@ QTabWidget::tab-bar {
 }
 
 QTabBar::tab {
-	min-width: 15ex;
+	min-width: 15px;
 }
 
 QTabBar::tab:selected {
@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">
