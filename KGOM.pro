@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui quick network sql printsupport charts xml location
+QT       += core gui quick network sql printsupport charts xml location concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

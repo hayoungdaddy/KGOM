@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QTextCodec>
 #include <QtMath>
+#include <QtConcurrent>
 
 #define KGOM_VERSION 2.0
 
@@ -638,6 +639,55 @@ static void SwapInt(int *data)
     dat.c[2] = temp;
     memcpy( data, &dat, sizeof(int) );
     return;
+}
+
+static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATION> myStaVT)
+{
+    QMultiMap<int, _QSCD_FOR_MULTIMAP> mmap;
+    _QSCD_PACKET QSCDBlock[MAX_QSCD_CNT];
+    memcpy(&QSCDBlock[0], msg, sizeof(QSCDBlock));
+    char sta[5];
+    char net[2];
+    memset(sta, 0x00, 6);
+    memset(net, 0x00, 3);
+
+    for(int i=0;i<MAX_QSCD_CNT;i++)
+    {
+        strncpy(sta, QSCDBlock[i].SSSSS, 5);
+        strncpy(net, QSCDBlock[i].LO, 2);
+
+        bool isMyStation = false;
+        //int index = 0;
+        QString sc, sc2;
+
+        sc2 = QString(sta) + "/" + QString(net).left(2);
+
+        for(int j=0;j<myStaVT.count();j++)
+        {
+            sc = myStaVT.at(j).sta + "/" + myStaVT.at(j).net;
+
+            if(sc.startsWith(sc2))
+            {
+                isMyStation = true;
+                //index = j;
+                break;
+            }
+        }
+
+        if(isMyStation == true)
+        {
+            _QSCD_FOR_MULTIMAP qfmm;
+            qfmm.sta = QString(sta);
+            qfmm.net = QString(net).left(2);
+            //qDebug() << qfmm.net << qfmm.sta;
+            SwapInt(&QSCDBlock[i].time);    // epoch time (GMT)
+            SwapFloat(&QSCDBlock[i].HPGA);
+            qfmm.hpga = QSCDBlock[i].HPGA;
+            mmap.insert(QSCDBlock[i].time, qfmm);
+        }
+    }
+
+    return mmap;
 }
 
 

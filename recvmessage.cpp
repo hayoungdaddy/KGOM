@@ -546,12 +546,17 @@ void RecvRealTimePGAMessage::run()
         if(this->isInterruptionRequested())
             this->quit();
 
-        auto_ptr<Message> message( consumer->receiveNoWait() );
+        //auto_ptr<Message> message( consumer->receiveNoWait() );
+        auto_ptr<Message> message( consumer->receive() );
         if( message.get() != NULL )
         {
             const BytesMessage* bytes_message = dynamic_cast< const BytesMessage* >( message.get() );
             char *msg = (char *)bytes_message->getBodyBytes();
 
+            QFuture<QMultiMap<int, _QSCD_FOR_MULTIMAP>> future = QtConcurrent::run(convertMMap, msg, stationVT);
+            future.waitForFinished();
+
+            /*
             _QSCD_PACKET QSCDBlock[MAX_QSCD_CNT];
             memcpy(&QSCDBlock[0], msg, sizeof(QSCDBlock));
             char sta[5];
@@ -595,8 +600,10 @@ void RecvRealTimePGAMessage::run()
                     mmap.insert(QSCDBlock[i].time, qfmm);
                 }
             }
+            */
 
-            emit _rvPGAMultiMap(mmap);
+            emit _rvPGAMultiMap(future.result());
+            //emit _rvPGAMultiMap(mmap);
             mmap.clear();
             free(msg);
         }
