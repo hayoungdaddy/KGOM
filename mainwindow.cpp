@@ -664,7 +664,7 @@ void MainWindow::blinkingWindow()
 
         if(remainSecSRelative >= 0)
         {
-            QString cmd = "play "  + configure.KGOM_HOME + "/bin/alert.oga &> /dev/null &";
+            QString cmd = "play -q -V1 "  + configure.KGOM_HOME + "/bin/alert.oga &";
             system(cmd.toLatin1().constData());
         }
     }
@@ -1946,10 +1946,14 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
         log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
-        restoreAction->triggered();
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+        {
+            restoreAction->triggered();
+            //this->showMaximized();
+            this->activateWindow();
+            this->raise();
+        }
+
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
     }
@@ -2028,9 +2032,14 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
         log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+        {
+            restoreAction->triggered();
+            //this->showMaximized();
+            this->activateWindow();
+            this->raise();
+        }
+
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
         alerting(900, dist);
@@ -2119,9 +2128,14 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         blinkColor.setNamedColor(getMagColor(eewInfo.magnitude).name());
         ui->mainToolBar->actions().at(3)->setVisible(true);
 
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+        {
+            restoreAction->triggered();
+            //this->showMaximized();
+            this->activateWindow();
+            this->raise();
+        }
+
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false); 
     }
