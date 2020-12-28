@@ -11,7 +11,7 @@
 #include <QtMath>
 #include <QtConcurrent>
 
-#define KGOM_VERSION 2.0
+#define KGOM_VERSION POSTECH
 
 #define MAX_LOCALSTA_NUM 6
 #define MAX_KISSSTA_NUM 6
