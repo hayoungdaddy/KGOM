@@ -33,14 +33,27 @@ Rectangle {
 
     Plugin {
         id: streetPlugin
+
+        /*
+        name: "here"
+        PluginParameter { name: "here.app_id"; value: "EXAMPLE_API_ID" }
+        PluginParameter { name: "here.token"; value: "EXAMPLE_TOKEN_123" }
+        */
+
+        name: "osm"
+        PluginParameter { name: "osm.mapping.host"; value: "https://a.tile.openstreetmap.org/" }
+
+
+        /*
         name: "osm"
 
         //PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: false }
         //PluginParameter { name: "osm.mapping.providersrepository.address"; value: "http://localhost/osm_tile/" }
         //PluginParameter { name: "osm.mapping.custom.host"; value: "http://localhost/osm_tile/" }
         PluginParameter { name: "osm.mapping.highdpi_tiles"; value: true }
-        PluginParameter { name: "osm.mapping.cache.directory"; value: "/.KGOM/cache" }
-        PluginParameter { name: "osm.mapping.offline.directory"; value: "/.KGOM/map_data" }
+        //PluginParameter { name: "osm.mapping.cache.directory"; value: "/.KGOM/cache" }
+        //PluginParameter { name: "osm.mapping.offline.directory"; value: "/.KGOM/map_data" }
+        */
     }
 
     Map {
@@ -50,7 +63,7 @@ Rectangle {
         center: QtPositioning.coordinate(36.3, 127.7)
         zoomLevel: 8
         maximumZoomLevel: 22
-        minimumZoomLevel: 8
+        minimumZoomLevel: 7
 
         Component.onCompleted: {
             for( var i_type in supportedMapTypes ) {
@@ -58,7 +71,6 @@ Rectangle {
                     activeMapType = supportedMapTypes[i_type]
                 }
             }
-            //activeMapType = supportedMapTypes[supportedMapTypes.length -1]
         }
 
         /*

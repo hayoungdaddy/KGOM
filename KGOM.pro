@@ -26,6 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
+    pgaalertinfo.cpp \
     writelog.cpp \
     eventlist.cpp \
     configurationwizard.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
     common.h \
+    pgaalertinfo.h \
     writelog.h \
     eventlist.h \
     configurationwizard.h \
@@ -71,6 +73,7 @@ FORMS += \
     eventlist.ui \
     configurationwizard.ui \
     logviewer.ui \
+    pgaalertinfo.ui \
     sohmonitor.ui \
     eewinfo.ui \
     searchform.ui \

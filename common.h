@@ -559,46 +559,35 @@ static double getDistance(double lat1, double lon1, double lat2, double lon2)
 }
 
 
-#define NUM_REGEND 24
-static QColor pgaColor[NUM_REGEND] = { QColor(143, 0, 0), QColor(175, 0, 0), QColor(207, 0, 0), QColor(239, 0, 0), QColor(255, 15, 0),
-                                QColor(255, 48, 0), QColor(255, 81, 0), QColor(255, 111, 0), QColor(255, 143, 0), QColor(255, 175, 0),
-                                QColor(255, 207, 0), QColor(255, 239, 0), QColor(255, 255, 15), QColor(223, 255, 48), QColor(191, 255, 81),
-                                QColor(159, 255, 111), QColor(95, 255, 175), QColor(0, 255, 255), QColor(0, 191, 255), QColor(0, 127, 255),
-                                QColor(0, 0, 255), QColor(0, 0, 223), QColor(0, 0, 191), QColor(0, 0, 159) };
-static double pgaValue[NUM_REGEND] = { 50, 40, 10, 8, 6,
-                              4, 2, 1, 0.8, 0.6,
-                              0.4, 0.2, 0.1, 0.08, 0.06,
-                              0.04, 0.02, 0.01, 0.008, 0.006,
-                              0.004, 0.002, 0.001, 0.0005 };
-static int pgaWidth[NUM_REGEND] = { 20, 20, 20, 20, 20,
-                             20, 20, 18, 18, 18,
-                             18, 18, 15, 15, 15,
-                             13, 13, 13, 12, 12,
-                             12, 13, 12, 12 };
+#define NUM_LEGEND 10
+static     int     inten[NUM_LEGEND] = {    1,    2,      3,     4,     5,      6,      7,      8,      9,     10 };
+static QString intenText[NUM_LEGEND] = {  "I",  "II", "III",  "IV",   "V",   "VI",  "VII", "VIII",   "IX",    "X" };
+static  double  pgaValue[NUM_LEGEND] = { 0.97, 2.94,   4.90, 23.52, 65.66, 127.40, 235.20, 431.20, 813.40, 999999 };
+static     int  pgaWidth[NUM_LEGEND] = {   12,   13,     14,    16,    18,     20,     20,     20,     20,     20 };
+static  QColor  pgaColor[NUM_LEGEND] = { QColor(215, 236, 255), QColor(165, 221, 249), QColor(146, 208,  80), QColor(255, 255,   0), QColor(255, 192,   0),
+                                       QColor(255,   0,   0), QColor(163,  39, 119), QColor( 99,  37,  35), QColor( 76,  38,   0), QColor(  0,   0,   0) };
 
-static int getRegendIndex(double value)
+static int getLegendIndex(double value)
 {
-    int regendIndex;
+    int legendIndex;
 
-    if( value > pgaValue[0] ) regendIndex = 0; // max
-    else if( value <= pgaValue[23] ) regendIndex = 23; // min
-    else if( value > pgaValue[23] && value < pgaValue[22] ) regendIndex = 23;
-    else if( value == pgaValue[22]) regendIndex = 22;
+    double gal = myRound(value, 2);
+
+    if( gal <= pgaValue[0] ) legendIndex = 0; // min
+    else if( gal > pgaValue[8] ) legendIndex = 9; // max
     else
     {
-        for(int j=0;j<22;j++)
+        for(int i=1;i<9;i++) // 1 ~ 8
         {
-            if(value <= pgaValue[j] && value > pgaValue[j+1])
+            if(gal <= pgaValue[i])
             {
-                regendIndex = j;
+                legendIndex = i;
                 break;
             }
         }
     }
 
-    if(regendIndex < 0) regendIndex = 0;
-    if(regendIndex > NUM_REGEND) regendIndex = 23;
-    return regendIndex;
+    return legendIndex;
 }
 
 static unsigned int GetBits(unsigned x, int p, int n) { return (x >> (p-n+1)) & ~(~0 << n) ; }
@@ -646,10 +635,10 @@ static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATIO
     QMultiMap<int, _QSCD_FOR_MULTIMAP> mmap;
     _QSCD_PACKET QSCDBlock[MAX_QSCD_CNT];
     memcpy(&QSCDBlock[0], msg, sizeof(QSCDBlock));
-    char sta[5];
-    char net[2];
-    memset(sta, 0x00, 6);
-    memset(net, 0x00, 3);
+    char sta[6];
+    char net[3];
+    memset(sta, 0x00, 5);
+    memset(net, 0x00, 2);
 
     for(int i=0;i<MAX_QSCD_CNT;i++)
     {

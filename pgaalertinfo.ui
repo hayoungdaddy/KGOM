@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PgaInfo</class>
- <widget class="QWidget" name="PgaInfo">
+ <class>PgaAlertInfo</class>
+ <widget class="QWidget" name="PgaAlertInfo">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -149,7 +149,7 @@ color: white;</string>
            <string>P
 
 최
-대</string>
+초</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>

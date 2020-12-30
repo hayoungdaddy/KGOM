@@ -255,35 +255,35 @@ void MainWindow::decorationGUI()
 {
     ui->noEventLB->hide();
 
-    QPixmap pm(65,65);
+    QPixmap pm(70, 70);
     pm.fill(QColor(243, 243, 243));
     QPainter p(&pm);
     p.setRenderHint(QPainter::Antialiasing, true);
-    p.setFont(QFont("Open Sans", 10, QFont::Bold));
+    p.setFont(QFont("Open Sans", 9, QFont::Bold));
     p.setPen(QPen(getMagColor(2)));
     p.setBrush(QBrush(getMagColor(2)));
-    p.drawEllipse(0, 0, 65, 65);
+    p.drawEllipse(0, 0, 70, 70);
     p.setPen(QPen(Qt::black));
     p.drawText(pm.rect(), Qt::AlignCenter, getMagText(2));
     ui->mag1LB->setPixmap(pm);
     ui->mag1LB2->setPixmap(pm);
     p.setPen(QPen(getMagColor(4)));
     p.setBrush(QBrush(getMagColor(4)));
-    p.drawEllipse(0, 0, 65, 65);
+    p.drawEllipse(0, 0, 70, 70);
     p.setPen(QPen(Qt::black));
     p.drawText(pm.rect(), Qt::AlignCenter, getMagText(4));
     ui->mag2LB->setPixmap(pm);
     ui->mag2LB2->setPixmap(pm);
     p.setPen(QPen(getMagColor(5)));
     p.setBrush(QBrush(getMagColor(5)));
-    p.drawEllipse(0, 0, 65, 65);
+    p.drawEllipse(0, 0, 70, 70);
     p.setPen(QPen(Qt::white));
     p.drawText(pm.rect(), Qt::AlignCenter, getMagText(5));
     ui->mag3LB->setPixmap(pm);
     ui->mag3LB2->setPixmap(pm);
     p.setPen(QPen(getMagColor(7)));
     p.setBrush(QBrush(getMagColor(7)));
-    p.drawEllipse(0, 0, 65, 65);
+    p.drawEllipse(0, 0, 70, 70);
     p.setPen(QPen(Qt::white));
     p.drawText(pm.rect(), Qt::AlignCenter, getMagText(7));
     ui->mag4LB->setPixmap(pm);
@@ -305,10 +305,6 @@ void MainWindow::setVisible(bool visible)
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    //qDebug() << eMapContainer->width() << eMapContainer->height();
-    //eMapContainer->adjustSize();
-
-    //QMetaObject::invokeMethod(this->eRootObj, "refreshMyPositionMarker", Q_RETURN_ARG(QVariant, eReturnedValue));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -431,7 +427,6 @@ void MainWindow::aboutthisActionTriggered()
 void MainWindow::doRepeatWork()
 {
     // show system time
-    //QDateTime time = QDateTime::currentDateTimeUtc();
     QDateTime timeUTC = QDateTime::currentDateTimeUtc();
     QDateTime dataTimeUTC = timeUTC.addSecs(- DATA_TIME_DIFF);
     QDateTime timeKST;
@@ -443,150 +438,82 @@ void MainWindow::doRepeatWork()
     if(text.right(5).startsWith("00:00") || text.right(5).startsWith("30:00"))
         log->write(configure.KGOM_HOME + "/logs/", "I'm alive.");
 
-    if(eventMode == 1)
+    if(eventMode == 1 && eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t()) // End a event
     {
-        if(eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t())
+        eventMode = 0;
+        maxMag = 0;
+        log->write(configure.KGOM_HOME + "/logs/", "---- Terminated this event ----");
+
+        ui->mainTW->setTabEnabled(0, true);
+        ui->mainTW->setCurrentIndex(1);
+
+        if(aniTimer->isActive())
+            aniTimer->stop();
+
+        QMetaObject::invokeMethod(this->aRootObj, "removeItemForAnimation", Q_RETURN_ARG(QVariant, aReturnedValue));
+
+        int evid = getLastEvid();
+
+        // make and put into database pgaInfos for max PGA
+        for(int i=0;i<configure.kissStaVT.count();i++)
         {
-            eventMode = 0;
-            maxMag = 0;
-            log->write(configure.KGOM_HOME + "/logs/", "---- Terminated this event ----");
+            QString query;
 
-            ui->mainTW->setTabEnabled(0, true);
-            ui->mainTW->setCurrentIndex(1);
-
-            if(aniTimer->isActive())
-                aniTimer->stop();
-
-            QMetaObject::invokeMethod(this->aRootObj, "removeItemForAnimation", Q_RETURN_ARG(QVariant, aReturnedValue));
-
-            // make and put into database pgaInfos for max PGA
-            for(int i=0;i<configure.kissStaVT.count();i++)
+            if(configure.kissStaVT.at(i).maxPGA != 0)
             {
-                int evid;
-                QString query;
-                evid = getLastEvid();
+                query = "INSERT INTO pgaInfo "
+                        "(evid, version, msg_type, sta, chan, net, loc, lat, lon, target_chan, e_time, time, maxZ, maxN, maxE, maxH, maxT, lddate) values (" +
+                        QString::number(evid) + ", 1, 'E', '" +
+                        QString(configure.kissStaVT.at(i).sta) + "', '" + QString(configure.kissStaVT.at(i).chan) + "', '" +
+                        QString(configure.kissStaVT.at(i).net) + "', '" + QString(configure.kissStaVT.at(i).loc) + "', " +
+                        QString::number(configure.kissStaVT.at(i).lat, 'f', 4) + ", " + QString::number(configure.kissStaVT.at(i).lon, 'f', 4) + ", 'H', " +
+                        QString::number(timeUTC.toTime_t(), 'f', 0) + ", " +
+                        QString::number(configure.kissStaVT.at(i).maxPGATime, 'f', 0) + ", -1, -1, -1, " +
+                        QString::number(configure.kissStaVT.at(i).maxPGA, 'f', 4) + ", -1, '" +
+                        QDate::currentDate().toString("yyyyMMdd") + "')";
 
-                if(configure.kissStaVT.at(i).maxPGA != 0)
+                this->pgaModel->setQuery(query);
+            }
+        }
+
+        // write pga to file
+        QString path, fileName;
+        path = configure.KGOM_HOME + "/data/PGA/" + eventStartTimeUTC.toString("yyyy/MM/") + QString::number(evid) + "/";
+        QDir evtFilePathD(path);
+        if(!evtFilePathD.exists())
+            evtFilePathD.mkpath(".");
+
+        mutex.lock();
+        for(int j=0;j<=EVENT_DURATION;j++)
+        {
+            QList<_QSCD_FOR_MULTIMAP> pgaList = pgaHouse.values(eventStartTimeUTC.toTime_t() + j);
+            if(pgaList.size() != 0)
+            {
+                for(int k=0;k<pgaList.size();k++)
                 {
-                    query = "INSERT INTO pgaInfo "
-                            "(evid, version, msg_type, sta, chan, net, loc, lat, lon, target_chan, e_time, time, maxZ, maxN, maxE, maxH, maxT, lddate) values (" +
-                            QString::number(evid) + ", 1, 'E', '" +
-                            QString(configure.kissStaVT.at(i).sta) + "', '" + QString(configure.kissStaVT.at(i).chan) + "', '" +
-                            QString(configure.kissStaVT.at(i).net) + "', '" + QString(configure.kissStaVT.at(i).loc) + "', " +
-                            QString::number(configure.kissStaVT.at(i).lat, 'f', 4) + ", " + QString::number(configure.kissStaVT.at(i).lon, 'f', 4) + ", 'H', " +
-                            QString::number(timeUTC.toTime_t(), 'f', 0) + ", " +
-                            QString::number(configure.kissStaVT.at(i).maxPGATime, 'f', 0) + ", -1, -1, -1, " +
-                            QString::number(configure.kissStaVT.at(i).maxPGA, 'f', 4) + ", -1, '" +
-                            QDate::currentDate().toString("yyyyMMdd") + "')";
-
-                    this->pgaModel->setQuery(query);
+                    fileName = path + "/" + pgaList.at(k).net + "_" + pgaList.at(k).sta;
+                    QFile pgaFile(fileName);
+                    pgaFile.open(QIODevice::WriteOnly | QIODevice::Append);
+                    QTextStream out(&pgaFile);
+                    out << QString::number(eventStartTimeUTC.toTime_t() + j) << " " << QString::number(pgaList.at(k).hpga, 'f', 4) << "\n";
+                    pgaFile.close();
                 }
             }
 
-            // reset maxPGA for realTime PGA
-            for(int i=0;i<configure.kissStaVT.count();i++)
-            {
-                _STATION sta = configure.kissStaVT.at(i);
-                sta.maxPGA = 0;
-                sta.maxPGATime = 0;
-                configure.kissStaVT.replace(i, sta);
-            }
-
-            setEventsTab(0, 0, 0, 10, 0, QDate::currentDate(), QDate::currentDate());
-            searchform->setCheckBox(0, 0);
         }
-    }
+        mutex.unlock();
 
-    // for RealTime PGA
-    // read PGA
-    mutex.lock();
-    QList<_QSCD_FOR_MULTIMAP> pgaList = pgaHouse.values(dataTimeUTC.toTime_t());
-    mutex.unlock();
-
-    resetStaCircleOnMap();
-
-    // reset a pga table
-    for(int j=0;j<configure.kissStaVT.count();j++)
-    {
-        ui->pgaTW->setItem(j, 2, new QTableWidgetItem("None"));
-        ui->pgaTW->item(j, 2)->setTextAlignment(Qt::AlignCenter);
-        ui->pgaTW->item(j, 2)->setTextColor(Qt::black);
-        ui->pgaTW->item(j, 2)->setBackgroundColor(Qt::white);
-    }
-
-    if(pgaList.size() != 0)
-    {
-        QDateTime dataTimeKST = convertKST(dataTimeUTC);
-        //dataTimeKST = convertKST(dataTimeKST);
-        ui->dataTimeLN->display(dataTimeKST.toString("hh:mm:ss"));
-
-        // display
-        int regendIndex;
-
-        for(int i=0;i<pgaList.size();i++)
+        // reset maxPGA for realTime PGA
+        for(int i=0;i<configure.kissStaVT.count();i++)
         {
-            for(int j=0;j<configure.kissStaVT.count();j++)
-            {
-                if(pgaList.at(i).net.startsWith(configure.kissStaVT.at(j).net) &&
-                        pgaList.at(i).sta.startsWith(configure.kissStaVT.at(j).sta))
-                {
-                    QFuture<int> future = QtConcurrent::run(getRegendIndex, pgaList.at(i).hpga);
-                    future.waitForFinished();
-                    regendIndex = future.result();
-
-                    // for a map
-                    QMetaObject::invokeMethod(this->rRootObj, "changeSizeAndColorForStaCircle", Q_RETURN_ARG(QVariant, rReturnedValue),
-                                              Q_ARG(QVariant, j), Q_ARG(QVariant, pgaWidth[regendIndex]*2),
-                                              Q_ARG(QVariant, pgaColor[regendIndex]),
-                                              Q_ARG(QVariant, 1));
-
-                    // for a pga table
-                    ui->pgaTW->setItem(j, 2, new QTableWidgetItem(QString::number(pgaList.at(i).hpga, 'f', 4)));
-                    ui->pgaTW->item(j, 2)->setBackgroundColor(pgaColor[regendIndex]);
-                    if(regendIndex <= 17)
-                        ui->pgaTW->item(j, 2)->setTextColor(Qt::black);
-                    else
-                        ui->pgaTW->item(j, 2)->setTextColor(Qt::white);
-
-                    // keep pga values
-                    if(eventMode == 1)
-                    {
-                        int evid;
-                        evid = getLastEvid();
-                        QString path, fileName;
-                        path = configure.KGOM_HOME + "/data/PGA/" + dataTimeUTC.toString("yyyy/MM/") + QString::number(evid) + "/";
-                        fileName = path + "/" + pgaList.at(i).net + "_" + pgaList.at(i).sta;
-                        QDir evtFilePathD(path);
-                        if(!evtFilePathD.exists())
-                            evtFilePathD.mkpath(".");
-
-                        QFile pgaFile(fileName);
-                        pgaFile.open(QIODevice::WriteOnly | QIODevice::Append);
-                        QTextStream out(&pgaFile);
-                        out << QString::number(dataTimeUTC.toTime_t()) << " " << QString::number(pgaList.at(i).hpga, 'f', 4) << "\n";
-                        pgaFile.close();
-
-                        if(configure.kissStaVT.at(j).maxPGA < pgaList.at(i).hpga)
-                        {
-                            _STATION sta = configure.kissStaVT.at(j);
-                            sta.maxPGA = pgaList.at(i).hpga;
-                            sta.maxPGATime = dataTimeUTC.toTime_t();
-                            configure.kissStaVT.replace(j, sta);
-                        }
-                    }
-
-                    break;
-                }
-            }
+            _STATION sta = configure.kissStaVT.at(i);
+            sta.maxPGA = 0;
+            sta.maxPGATime = 0;
+            configure.kissStaVT.replace(i, sta);
         }
 
-        for(int i=0;i<ui->pgaTW->rowCount();i++)
-        {
-            for(int j=0;j<ui->pgaTW->columnCount();j++)
-            {
-                ui->pgaTW->item(i, j)->setTextAlignment(Qt::AlignCenter);
-            }
-        }
+        setEventsTab(0, 0, 0, 10, 0, QDate::currentDate(), QDate::currentDate());
+        searchform->setCheckBox(0, 0);
     }
 
     // remove mmap
@@ -596,7 +523,7 @@ void MainWindow::doRepeatWork()
     {
         mutex.lock();
         QMultiMap<int, _QSCD_FOR_MULTIMAP>::iterator untilIter;
-        untilIter = pgaHouse.lowerBound(dataTimeUTC.toTime_t() - 10);
+        untilIter = pgaHouse.lowerBound(timeUTC.toTime_t() - 150); // Keep pga data during 150 seconds before now
 
         for(iter = pgaHouse.begin() ; untilIter != iter;)
         {
@@ -620,6 +547,7 @@ void MainWindow::setupPGATable()
         ui->pgaTW->setItem(ui->pgaTW->rowCount()-1, 0, new QTableWidgetItem(configure.kissStaVT.at(i).net));
         ui->pgaTW->setItem(ui->pgaTW->rowCount()-1, 1, new QTableWidgetItem(configure.kissStaVT.at(i).sta));
         ui->pgaTW->setItem(ui->pgaTW->rowCount()-1, 2, new QTableWidgetItem("None"));
+        ui->pgaTW->setItem(ui->pgaTW->rowCount()-1, 3, new QTableWidgetItem("None"));
     }
 }
 
@@ -664,7 +592,7 @@ void MainWindow::blinkingWindow()
 
         if(remainSecSRelative >= 0)
         {
-            QString cmd = "play "  + configure.KGOM_HOME + "/bin/alert.oga &> /dev/null &";
+            QString cmd = "play -q -V1"  + configure.KGOM_HOME + "/bin/alert.oga &";
             system(cmd.toLatin1().constData());
         }
     }
@@ -1556,7 +1484,6 @@ void MainWindow::setup()
             QString failover = "failover:(tcp://" + configure.local_pga_amq.ip + ":" + configure.local_pga_amq.port + ")";
             lrecvPGA->setup(failover, configure.local_pga_amq.user, configure.local_pga_amq.passwd, configure.local_pga_amq.topic, true, false);
             connect(lrecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
-            //connect(lrecvPGA, SIGNAL(_rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)), this, SLOT(rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t)));
             lrecvPGA->start();
         }
 
@@ -1946,10 +1873,11 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
         log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
-        restoreAction->triggered();
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+            restoreAction->triggered();
+        //this->showMaximized();
+        //this->activateWindow();
+        //this->raise();
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
     }
@@ -2028,9 +1956,12 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
         log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+            restoreAction->triggered();
+
+        //this->showMaximized();
+        //this->activateWindow();
+        //this->raise();
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
         alerting(900, dist);
@@ -2119,9 +2050,12 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         blinkColor.setNamedColor(getMagColor(eewInfo.magnitude).name());
         ui->mainToolBar->actions().at(3)->setVisible(true);
 
-        this->showMaximized();
-        this->activateWindow();
-        this->raise();
+        if(this->isHidden())
+            restoreAction->triggered();
+
+        //this->showMaximized();
+        //this->activateWindow();
+        //this->raise();
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false); 
     }
@@ -2213,7 +2147,62 @@ void MainWindow::rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP> mmFromAMQ)
     {
         i.next();
         pgaHouse.insert(i.key(), i.value());
+
+        // Display REALTIME PGA
+        for(int j=0;j<configure.kissStaVT.count();j++)
+        {
+            QString sta = configure.kissStaVT.at(j).sta;
+            QString net = configure.kissStaVT.at(j).net;
+            float hpga = i.value().hpga;
+            int legendIndex;
+            QDateTime dataTimeUTC, dataTimeKST;
+            dataTimeUTC.setTimeSpec(Qt::UTC);
+
+            if(i.value().net.startsWith(net) && i.value().sta.startsWith(sta))
+            {
+                QFuture<int> future = QtConcurrent::run(getLegendIndex, hpga);
+                future.waitForFinished();
+                legendIndex = future.result();
+                dataTimeUTC.setTime_t(i.key());
+                dataTimeKST = convertKST(dataTimeUTC);
+
+                // for a map
+                QMetaObject::invokeMethod(this->rRootObj, "changeSizeAndColorForStaCircle", Q_RETURN_ARG(QVariant, rReturnedValue),
+                                          Q_ARG(QVariant, j), Q_ARG(QVariant, pgaWidth[legendIndex]*2),
+                                          Q_ARG(QVariant, pgaColor[legendIndex]),
+                                          Q_ARG(QVariant, 1));
+
+                // for a pga table
+                ui->pgaTW->setItem(j, 2, new QTableWidgetItem(dataTimeKST.toString("hh:mm:ss")));
+                ui->pgaTW->setItem(j, 3, new QTableWidgetItem(QString::number(hpga, 'f', 4)));
+                ui->pgaTW->item(j, 3)->setBackgroundColor(pgaColor[legendIndex]);
+                if(legendIndex < 7)
+                    ui->pgaTW->item(j, 3)->setTextColor(Qt::black);
+                else
+                    ui->pgaTW->item(j, 3)->setTextColor(Qt::white);
+
+                // keep max pga on event
+                if(eventMode == 1 && dataTimeUTC >= eventStartTimeUTC && dataTimeUTC.toTime_t() <= eventStartTimeUTC.toTime_t() + EVENT_DURATION)
+                {
+                    if(configure.kissStaVT.at(j).maxPGA < hpga)
+                    {
+                        _STATION sta = configure.kissStaVT.at(j);
+                        sta.maxPGA = hpga;
+                        sta.maxPGATime = dataTimeUTC.toTime_t();
+                        configure.kissStaVT.replace(j, sta);
+                    }
+                }
+            }
+        }
     }
     mutex.unlock();
+
+    for(int i=0;i<ui->pgaTW->rowCount();i++)
+    {
+        for(int j=0;j<ui->pgaTW->columnCount();j++)
+        {
+            ui->pgaTW->item(i, j)->setTextAlignment(Qt::AlignCenter);
+        }
+    }
 }
 
