@@ -1336,6 +1336,9 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
     double dist = getDistance(minLat, minLon, maxLat, maxLon);
     QMetaObject::invokeMethod(this->aRootObj, "adjustMap", Q_RETURN_ARG(QVariant, aReturnedValue),
                               Q_ARG(QVariant, (minLat+maxLat)/2), Q_ARG(QVariant, (minLon+maxLon)/2), Q_ARG(QVariant, dist));  
+
+    QSpacerItem *spacer = new QSpacerItem(40, 40, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->alertListVLO->addItem(spacer);
 }
 
 void MainWindow::drawIntensityOnMap(QString yearMonth, QString evid)
