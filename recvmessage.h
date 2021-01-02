@@ -82,28 +82,6 @@ signals:
     void _rvOnsiteInfo(_KGOnSite_Info_t);
 };
 
-class RecvPGAMessage : public QThread
-{
-    Q_OBJECT
-public:
-    RecvPGAMessage(QWidget *parent = 0);
-    ~RecvPGAMessage();
-
-public:
-    Connection *connection;
-    Session *session;
-    Destination *destination;
-    MessageConsumer *consumer;
-    QString ip;
-
-    void setup(QString, QString, QString, QString, bool, bool);
-    void cleanUp();
-    void run();
-
-signals:
-    void _rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t);
-};
-
 class RecvSOHMessage : public QThread
 {
     Q_OBJECT
@@ -128,12 +106,12 @@ signals:
     void _rvSOHInfo(_KGOnSite_SOH_t, int, int);
 };
 
-class RecvRealTimePGAMessage : public QThread
+class RecvQSCD20Message : public QThread
 {
     Q_OBJECT
 public:
-    RecvRealTimePGAMessage(QWidget *parent = 0);
-    ~RecvRealTimePGAMessage();
+    RecvQSCD20Message(QWidget *parent = 0);
+    ~RecvQSCD20Message();
 
 public:
     Connection *connection;

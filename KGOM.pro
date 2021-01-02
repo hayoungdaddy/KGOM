@@ -27,6 +27,7 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     pgaalertinfo.cpp \
+    pgadetectdetailtable.cpp \
     writelog.cpp \
     eventlist.cpp \
     configurationwizard.cpp \
@@ -49,6 +50,7 @@ HEADERS += \
         mainwindow.h \
     common.h \
     pgaalertinfo.h \
+    pgadetectdetailtable.h \
     writelog.h \
     eventlist.h \
     configurationwizard.h \
@@ -74,6 +76,7 @@ FORMS += \
     configurationwizard.ui \
     logviewer.ui \
     pgaalertinfo.ui \
+    pgadetectdetailtable.ui \
     sohmonitor.ui \
     eewinfo.ui \
     searchform.ui \

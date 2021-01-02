@@ -19,7 +19,7 @@ public:
     explicit PgaAlertInfo(QWidget *parent = 0);
     ~PgaAlertInfo();
 
-    void setup(QString, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>);
+    void setup(_KGKIIS_GMPEAK_EVENT_STA_t);
 
 private:
     Ui::PgaAlertInfo *ui;

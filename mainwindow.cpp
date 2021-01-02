@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "QtConcurrent/qtconcurrentrun.h"
-
 MainWindow::MainWindow(QString configFile, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -15,17 +13,15 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     qRegisterMetaType<_EEWInfo>("_EEWInfo");
     qRegisterMetaType<_KGOnSite_Info_t>("_KGOnSite_Info_t");
     qRegisterMetaType<_KGOnSite_SOH_t>("_KGOnSite_SOH_t");
-    qRegisterMetaType<_KGKIIS_GMPEAK_EVENT_t>("_KGKIIS_GMPEAK_EVENT_t");
-    qRegisterMetaType<_KGKIIS_GMPEAK_EVENT_STA_t>("_KGKIIS_GMPEAK_EVENT_STA_t");
     qRegisterMetaType< QMultiMap<int,_QSCD_FOR_MULTIMAP> >("QMultiMap<int,_QSCD_FOR_MULTIMAP>");
 
     // Setup threads for receiving data
     krecveew = new RecvEEWMessage(this);
     krecvOnsite = new RecvOnsiteMessage(this);
     krecvSoh = new RecvSOHMessage(this);
-    krecvPGA = new RecvRealTimePGAMessage(this);
+    krecvQSCD = new RecvQSCD20Message(this);
     lrecvOnsite = new RecvOnsiteMessage(this);
-    lrecvPGA = new RecvRealTimePGAMessage(this);
+    lrecvQSCD = new RecvQSCD20Message(this);
     lrecvSoh = new RecvSOHMessage(this);
 
     codec = QTextCodec::codecForName("utf-8");
@@ -114,7 +110,6 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     // Load a osm map & Setup a Map for EVENTS tab
     QQuickView *eventsView = new QQuickView();
     eMapContainer = QWidget::createWindowContainer(eventsView, this);
-    //eventsView->setResizeMode(QQuickView::SizeViewToRootObject);
     eventsView->setResizeMode(QQuickView::SizeRootObjectToView);
     eMapContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     eMapContainer->setFocusPolicy(Qt::TabFocus);
@@ -125,7 +120,6 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     QMetaObject::invokeMethod(this->eRootObj, "clearMap", Q_RETURN_ARG(QVariant, eReturnedValue));
     QMetaObject::invokeMethod(this->eRootObj, "createMyPositionMarker", Q_RETURN_ARG(QVariant, eReturnedValue));
     QMetaObject::invokeMethod(this->eRootObj, "createCurrentEventMarker", Q_RETURN_ARG(QVariant, eReturnedValue));
-
     QObject::connect(this->eRootObj, SIGNAL(sendIDSignal(QString, QString, QString)), this, SLOT(_qmlSignalfromEMap(QString, QString, QString)));
 
     // Load a osm map & Setup a Map for ALERT tab
@@ -174,6 +168,7 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     this->onsiteModel = new QSqlQueryModel();
     this->eewModel = new QSqlQueryModel();
     this->pgaModel = new QSqlQueryModel();
+    this->pgaDetectModel = new QSqlQueryModel();
 
     // Setup SOH widgets
     for(int i=0;i<MAX_LOCALSTA_NUM;i++)
@@ -220,7 +215,6 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     if(configure.alarm_device_ip != "")
         controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
 
-    //ui->replayPB->hide();
     connect(ui->replayPB, SIGNAL(clicked(bool)), this, SLOT(eventReplayPBClicked()));
 }
 
@@ -232,12 +226,12 @@ MainWindow::~MainWindow()
         krecvOnsite->requestInterruption();
     if(krecvSoh->isRunning())
         krecvSoh->requestInterruption();
-    if(krecvPGA->isRunning())
-        krecvPGA->requestInterruption();
+    if(krecvQSCD->isRunning())
+        krecvQSCD->requestInterruption();
     if(lrecvOnsite->isRunning())
         lrecvOnsite->requestInterruption();
-    if(lrecvPGA->isRunning())
-        lrecvPGA->requestInterruption();
+    if(lrecvQSCD->isRunning())
+        lrecvQSCD->requestInterruption();
     if(lrecvSoh->isRunning())
         lrecvSoh->requestInterruption();
 
@@ -301,10 +295,6 @@ void MainWindow::setVisible(bool visible)
     maximizeAction->setEnabled(!isMaximized());
     restoreAction->setEnabled(isMaximized() || !visible);
     QMainWindow::setVisible(visible);
-}
-
-void MainWindow::resizeEvent(QResizeEvent *)
-{
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -428,7 +418,6 @@ void MainWindow::doRepeatWork()
 {
     // show system time
     QDateTime timeUTC = QDateTime::currentDateTimeUtc();
-    QDateTime dataTimeUTC = timeUTC.addSecs(- DATA_TIME_DIFF);
     QDateTime timeKST;
     timeKST = convertKST(timeUTC);
 
@@ -438,7 +427,8 @@ void MainWindow::doRepeatWork()
     if(text.right(5).startsWith("00:00") || text.right(5).startsWith("30:00"))
         log->write(configure.KGOM_HOME + "/logs/", "I'm alive.");
 
-    if(eventMode == 1 && eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t()) // End a event
+    // End a event
+    if(eventMode == 1 && eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t())
     {
         eventMode = 0;
         maxMag = 0;
@@ -449,6 +439,10 @@ void MainWindow::doRepeatWork()
 
         if(aniTimer->isActive())
             aniTimer->stop();
+
+        pgaDetection.num = 0;
+        pgaDetection.staPGAList.clear();
+        pgaDetection.condition = 0;
 
         QMetaObject::invokeMethod(this->aRootObj, "removeItemForAnimation", Q_RETURN_ARG(QVariant, aReturnedValue));
 
@@ -463,7 +457,7 @@ void MainWindow::doRepeatWork()
             {
                 query = "INSERT INTO pgaInfo "
                         "(evid, version, msg_type, sta, chan, net, loc, lat, lon, target_chan, e_time, time, maxZ, maxN, maxE, maxH, maxT, lddate) values (" +
-                        QString::number(evid) + ", 1, 'E', '" +
+                        QString::number(evid) + ", 1, 'P', '" +
                         QString(configure.kissStaVT.at(i).sta) + "', '" + QString(configure.kissStaVT.at(i).chan) + "', '" +
                         QString(configure.kissStaVT.at(i).net) + "', '" + QString(configure.kissStaVT.at(i).loc) + "', " +
                         QString::number(configure.kissStaVT.at(i).lat, 'f', 4) + ", " + QString::number(configure.kissStaVT.at(i).lon, 'f', 4) + ", 'H', " +
@@ -592,13 +586,15 @@ void MainWindow::blinkingWindow()
 
         if(remainSecSRelative >= 0)
         {
-            QString cmd = "play -q -V1"  + configure.KGOM_HOME + "/bin/alert.oga &";
+            QString cmd = "play -q -V1 "  + configure.KGOM_HOME + "/bin/alert.oga &";
             system(cmd.toLatin1().constData());
         }
     }
     else if(blinkCount == 1)
     {
-        ui->mainTW->setStyleSheet("background-color: rgb(235, 235, 235);");
+        QString style = "background-color: rgb(235, 235, 235)";
+
+        ui->mainTW->setStyleSheet(style);
         blinkCount = 0;   
     }
 }
@@ -650,7 +646,6 @@ void MainWindow::setDiffTime()
         QString temp = ui->timeLB->text(); //"yyyy-MM-dd hh:mm:ss KST"
         temp = temp.left(19);
         QDateTime tt = QDateTime::fromString(temp, "yyyy-MM-dd hh:mm:ss");
-        //tt.setTimeSpec(Qt::UTC);
 
         int diffSec;
 
@@ -793,19 +788,37 @@ void MainWindow::readConfigure(QString configFile)
                 configure.alarm_device_ip = _line.section("=", 1, 1).section(":", 0, 0);
                 configure.alarm_device_port = _line.section("=", 1, 1).section(":", 1, 1).toInt();
             }
-            else if(_line.startsWith("LEVEL1") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("MAG_LEVEL1") && _line.section("=",1,1) != "")
             {
-                configure.level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.level1_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
-                configure.level1_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
-                configure.level1_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
+                configure.mag_level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.mag_level1_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.mag_level1_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
+                configure.mag_level1_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
             }
-            else if(_line.startsWith("LEVEL2") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("MAG_LEVEL2") && _line.section("=",1,1) != "")
             {
-                configure.level2_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.level2_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
-                configure.level2_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
-                configure.level2_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
+                configure.mag_level2_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.mag_level2_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.mag_level2_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
+                configure.mag_level2_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
+            }
+            else if(_line.startsWith("PGA_LEVEL1") && _line.section("=",1,1) != "")
+            {
+                configure.pga_level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.pga_level1_threshold = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+            }
+            else if(_line.startsWith("PGA_LEVEL2") && _line.section("=",1,1) != "")
+            {
+                configure.pga_level2_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.pga_level2_threshold = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+            }
+            else if(_line.startsWith("NUM_STA_PGA") && _line.section("=",1,1) != "")
+            {
+                configure.pga_num_sta_threshold = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+            }
+            else if(_line.startsWith("PGA_TIME_WINDOW") && _line.section("=",1,1) != "")
+            {
+                configure.pga_time_window = _line.section("=", 1, 1).section(":", 0, 0).toInt();
             }
             else if(_line.startsWith("P_VEL"))
                 configure.p_vel = _line.section("=",1,1).toDouble();
@@ -814,6 +827,16 @@ void MainWindow::readConfigure(QString configFile)
         }
         file.close();
     }
+
+    // setup pgaDetection for event detection
+    pgaDetection.num = 0;
+    pgaDetection.num_threshold = configure.pga_num_sta_threshold;
+    pgaDetection.condition = 0;
+    pgaDetection.threshold1 = configure.pga_level1_threshold;
+    pgaDetection.threshold2 = configure.pga_level2_threshold;
+    pgaDetection.timeWindow = configure.pga_time_window;
+    if(!pgaDetection.staPGAList.isEmpty()) pgaDetection.staPGAList.clear();
+
     log->write(configure.KGOM_HOME + "/logs/", "Succeed loading parameters. <" +
                configFile + ">");
 }
@@ -877,7 +900,6 @@ void MainWindow::createActionsOnToolbar()
 
 void MainWindow::showAnimation()
 {
-    //qDebug() << remainSecSRelative;
     remainSecPRelative = myRound(remainSecPRelative - 0.1, 1);
     remainSecSRelative = myRound(remainSecSRelative - 0.1, 1);
 
@@ -888,8 +910,7 @@ void MainWindow::showAnimation()
     QString tColor;
     if(intenI == 5) tColor = "black";
     else tColor = "black";
-    //else tColor = "white";
-    //qDebug() << "intenI " << intenI;
+
     QMetaObject::invokeMethod(this->aRootObj, "addCircleForAnimation",
                               Q_RETURN_ARG(QVariant, aReturnedValue),
                               Q_ARG(QVariant, aniLat), Q_ARG(QVariant, aniLon),
@@ -899,7 +920,6 @@ void MainWindow::showAnimation()
                               Q_ARG(QVariant, Vibration),
                               Q_ARG(QVariant, tColor),
                               Q_ARG(QVariant, getIntenColor(intenI).name()));
-    //aniCount++;
 
     if(remainSecSRelative >= 0 && remainSecSRelative <= 10 && blinkTimer->interval() == 1000)
         blinkTimer->setInterval(500);
@@ -918,29 +938,57 @@ int MainWindow::getLastEvid()
     return this->eventModel->record(0).value("max(evid)").toInt();
 }
 
-void MainWindow::alerting(double mag, double dist)
+void MainWindow::pgaAlerting()
 {
-    if(configure.level1_alert_use == 1)
+    _KGKIIS_GMPEAK_EVENT_STA_t sta;
+    pgaDetection.condition = 0;
+
+    for(int i=0;i<pgaDetection.staPGAList.size();i++)
     {
-        if(mag >= configure.level1_alert_min_mag && mag < configure.level1_alert_max_mag && dist <= configure.level1_alert_dist)
+        sta = pgaDetection.staPGAList.at(i);
+        if(sta.maxH >= pgaDetection.threshold1 && pgaDetection.condition == 0)
+            pgaDetection.condition = 1;
+        else if(sta.maxH >= pgaDetection.threshold2)
+            pgaDetection.condition = 2;
+    }
+
+    if(pgaDetection.condition == 1 && configure.pga_level1_alert_use == 1 && configure.alarm_device_ip != "")
+    {
+        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
+        controlAlarm->blinkYELLOW();
+        log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked from PGA");
+    }
+    else if(pgaDetection.condition == 2 && configure.pga_level2_alert_use == 1 && configure.alarm_device_ip != "")
+    {
+        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
+        controlAlarm->blinkRED();
+        log->write(configure.KGOM_HOME + "/logs/", "red Alarm Worked from PGA");
+    }
+}
+
+void MainWindow::magAlerting(double mag, double dist)
+{
+    if(configure.mag_level1_alert_use == 1)
+    {
+        if(mag >= configure.mag_level1_alert_min_mag && mag < configure.mag_level1_alert_max_mag && dist <= configure.mag_level1_alert_dist)
         {
             if(configure.alarm_device_ip != "")
             {
                 controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
                 controlAlarm->blinkYELLOW();
-                log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked");
+                log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked from Magnitude");
             }
         }
     }
-    if(configure.level2_alert_use == 1)
+    if(configure.mag_level2_alert_use == 1)
     {
-        if(mag >= configure.level2_alert_min_mag && mag < configure.level2_alert_max_mag && dist <= configure.level2_alert_dist)
+        if(mag >= configure.mag_level2_alert_min_mag && mag < configure.mag_level2_alert_max_mag && dist <= configure.mag_level2_alert_dist)
         {
             if(configure.alarm_device_ip != "")
             {
                 controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
                 controlAlarm->blinkRED();
-                log->write(configure.KGOM_HOME + "/logs/", "Red Alarm Worked");
+                log->write(configure.KGOM_HOME + "/logs/", "Red Alarm Worked from Magnitude");
             }
         }
     }
@@ -954,8 +1002,31 @@ void MainWindow::getEventInfo(int evid)
     QVector<_KGOnSite_Info_t> onsiteInfos;
     QVector<_EEWInfo> eewInfos;
     QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos;
-    QString pgaChannel;
+    QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaDetectInfos;
+
     int pgaTime;
+
+    query = "select * from pgaDetectInfo where evid =" + evidS;
+    this->pgaDetectModel->setQuery(query);
+
+    if(this->pgaDetectModel->rowCount() > 0)
+    {
+        for(int i=0;i<this->pgaDetectModel->rowCount();i++)
+        {
+            _KGKIIS_GMPEAK_EVENT_STA_t info;
+            info.version = this->pgaDetectModel->record(i).value("version").toInt();
+
+            strcpy(info.sta, this->pgaDetectModel->record(i).value("sta").toString().toLatin1().constData());
+            strcpy(info.chan, this->pgaDetectModel->record(i).value("chan").toString().toLatin1().constData());
+            strcpy(info.net, this->pgaDetectModel->record(i).value("net").toString().toLatin1().constData());
+            strcpy(info.loc, this->pgaDetectModel->record(i).value("loc").toString().toLatin1().constData());
+            info.lat   = this->pgaDetectModel->record(i).value("lat").toDouble();
+            info.lon   = this->pgaDetectModel->record(i).value("lon").toDouble();
+            info.time  = this->pgaDetectModel->record(i).value("time").toInt();
+            info.maxH = this->pgaDetectModel->record(i).value("maxH").toFloat();
+            pgaDetectInfos.push_back(info);
+        }
+    }
 
     query = "select * from pgaInfo where evid =" + evidS;
     this->pgaModel->setQuery(query);
@@ -966,17 +1037,12 @@ void MainWindow::getEventInfo(int evid)
         {
             _KGKIIS_GMPEAK_EVENT_STA_t info;
             info.version = this->pgaModel->record(i).value("version").toInt();
-            char *temp;
-            temp = (char*) malloc(sizeof(char));
-            strcpy(temp, this->pgaModel->record(i).value("msg_type").toString().toLatin1().constData());
-            info.msg_type = temp[0];
             strcpy(info.sta, this->pgaModel->record(i).value("sta").toString().toLatin1().constData());
             strcpy(info.chan, this->pgaModel->record(i).value("chan").toString().toLatin1().constData());
             strcpy(info.net, this->pgaModel->record(i).value("net").toString().toLatin1().constData());
             strcpy(info.loc, this->pgaModel->record(i).value("loc").toString().toLatin1().constData());
             info.lat   = this->pgaModel->record(i).value("lat").toDouble();
             info.lon   = this->pgaModel->record(i).value("lon").toDouble();
-            pgaChannel = this->pgaModel->record(i).value("target_chan").toString();
             pgaTime    = this->pgaModel->record(i).value("e_time").toInt();
             info.time  = this->pgaModel->record(i).value("time").toInt();
             info.maxZ = this->pgaModel->record(i).value("maxZ").toFloat();
@@ -985,7 +1051,6 @@ void MainWindow::getEventInfo(int evid)
             info.maxH = this->pgaModel->record(i).value("maxH").toFloat();
             info.maxT = this->pgaModel->record(i).value("maxT").toFloat();
             pgaInfos.push_back(info);
-            free(temp);
         }
     }
 
@@ -998,18 +1063,15 @@ void MainWindow::getEventInfo(int evid)
         {
             _KGOnSite_Info_t info;
             info.version = this->onsiteModel->record(i).value("version").toInt();
-            char *temp;
-            temp = (char*) malloc(sizeof(char));
-            strcpy(temp, this->onsiteModel->record(i).value("msg_type").toString().toLatin1().constData());
-            info.msg_type = temp[0];
+
             strcpy(info.sta, this->onsiteModel->record(i).value("sta").toString().toLatin1().constData());
             strcpy(info.chan, this->onsiteModel->record(i).value("chan").toString().toLatin1().constData());
             strcpy(info.net, this->onsiteModel->record(i).value("net").toString().toLatin1().constData());
             strcpy(info.loc, this->onsiteModel->record(i).value("loc").toString().toLatin1().constData());
-            strcpy(temp, this->onsiteModel->record(i).value("duration").toString().toLatin1().constData());
-            info.duration = temp[0];
-            strcpy(temp, this->onsiteModel->record(i).value("type").toString().toLatin1().constData());
-            info.type = temp[0];
+            //strcpy(temp, this->onsiteModel->record(i).value("duration").toString().toLatin1().constData());
+            //info.duration = temp[0];
+            //strcpy(temp, this->onsiteModel->record(i).value("type").toString().toLatin1().constData());
+            //info.type = temp[0];
             info.ttime = this->onsiteModel->record(i).value("ttime").toDouble();
             info.disp_count = this->onsiteModel->record(i).value("disp_count").toFloat();
             info.displacement = this->onsiteModel->record(i).value("displacement").toFloat();
@@ -1032,13 +1094,13 @@ void MainWindow::getEventInfo(int evid)
             info.distance_uncertainty_low = this->onsiteModel->record(i).value("distance_uncertainty_low").toFloat();
             info.distance_uncertainty_high = this->onsiteModel->record(i).value("distance_uncertainty_high").toFloat();
             info.evid = evid;
-            strcpy(temp, this->onsiteModel->record(i).value("fromWhere").toString().toLatin1().constData());
-            info.fromWhere = temp[0];
+            //strcpy(temp, this->onsiteModel->record(i).value("fromWhere").toString().toLatin1().constData());
+            //info.fromWhere = temp[0];
             info.lat = this->onsiteModel->record(i).value("lat").toDouble();
             info.lon = this->onsiteModel->record(i).value("lon").toDouble();
             info.elev = this->onsiteModel->record(i).value("elev").toDouble();
             onsiteInfos.push_back(info);
-            free(temp);
+
         }
     }
 
@@ -1051,10 +1113,6 @@ void MainWindow::getEventInfo(int evid)
         {
             _EEWInfo eewInfo;
             eewInfo.evid = this->eewModel->record(i).value("evid").toInt();
-            char *temp;
-            temp = (char*) malloc(sizeof(char));
-            strcpy(temp, this->eewModel->record(i).value("type").toString().toLatin1().constData());
-            eewInfo.type = temp[0];
             eewInfo.eew_evid = this->eewModel->record(i).value("eew_evid").toInt();
             eewInfo.version = this->eewModel->record(i).value("version").toInt();
             int mc = this->eewModel->record(i).value("message_category").toInt();
@@ -1081,17 +1139,16 @@ void MainWindow::getEventInfo(int evid)
             eewInfo.percentsta = this->eewModel->record(i).value("percentsta").toDouble();
             eewInfo.misfit = this->eewModel->record(i).value("misfit").toDouble();
             eewInfo.sent_flag = this->eewModel->record(i).value("sent_flag").toInt();
-            free(temp);
             eewInfos.push_back(eewInfo);
         }
     }
 
-    setAlertTab(onsiteInfos, eewInfos, pgaChannel, pgaTime, pgaInfos, evidS);
-    detailview->setup(onsiteInfos, eewInfos, pgaChannel, pgaTime, pgaInfos, evidS, configure.KGOM_HOME);
+    setAlertTab(onsiteInfos, eewInfos, pgaTime, pgaDetectInfos, pgaInfos, evidS);
+    detailview->setup(onsiteInfos, eewInfos, pgaDetectInfos, pgaTime, pgaInfos, evidS, configure.KGOM_HOME);
 }
 
 void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> eewInfos,
-                             QString pgaChannel, int pgaTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid)
+                             int pgaTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaDetectInfos, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid)
 {
     QLayoutItem *child;
 
@@ -1112,7 +1169,7 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
     this->eventModel->setQuery(query);
     drawIntensityOnMap(this->eventModel->record(0).value("lddate").toString(), evid);;
 
-    if(eewInfos.count() != 0)
+    if(!eewInfos.isEmpty())
     {
         QDateTime ttimeUTC;
         QDateTime ttimeKST;
@@ -1137,7 +1194,7 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         ui->replayPB->show();
     }
 
-    if(onsiteInfos.count() != 0)
+    if(!onsiteInfos.isEmpty())
     {
         // sort infos,  using ttime/sta/net
         QVector<_KGOnSite_Info_t> tempInfos;
@@ -1185,39 +1242,17 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
             onsiteinfo->setup(tempInfos.at(i));
             ui->alertListVLO->addWidget(onsiteinfo);
 
-            if(QString(tempInfos.at(i).fromWhere).startsWith("K"))
+            if(QString(tempInfos.at(i).net).startsWith("K"))
             {
                 drawOnsiteOnMap(1, tempInfos.at(i));
-                /*
-                int j;
-                for(j=0;j<configure.kissStaVT.count();j++)
-                {
-                    if(configure.kissStaVT.at(j).sta.startsWith(QString(tempInfos.at(i).sta)) &&
-                            configure.kissStaVT.at(j).net.startsWith(QString(tempInfos.at(i).net)))
-                        break;
-                }
-                drawOnsiteOnMap(1, tempInfos.at(i), j);
-                */
-
                 if(tempInfos.at(i).lat < minLat) minLat = tempInfos.at(i).lat;
                 if(tempInfos.at(i).lat > maxLat) maxLat = tempInfos.at(i).lat;
                 if(tempInfos.at(i).lon < minLon) minLon = tempInfos.at(i).lon;
                 if(tempInfos.at(i).lon > maxLon) maxLon = tempInfos.at(i).lon;
             }
-            else if(QString(tempInfos.at(i).fromWhere).startsWith("L"))
+            else if(QString(tempInfos.at(i).net).startsWith("L"))
             {
                 drawOnsiteOnMap(0, tempInfos.at(i));
-                /*
-                int j;
-                for(j=0;j<configure.localStaVT.count();j++)
-                {
-                    if(configure.localStaVT.at(j).sta.startsWith(QString(tempInfos.at(i).sta)) &&
-                            configure.localStaVT.at(j).net.startsWith(QString(tempInfos.at(i).net)))
-                        break;
-                }
-                drawOnsiteOnMap(0, tempInfos.at(i), j);
-                */
-
                 if(tempInfos.at(i).lat < minLat) minLat = tempInfos.at(i).lat;
                 if(tempInfos.at(i).lat > maxLat) maxLat = tempInfos.at(i).lat;
                 if(tempInfos.at(i).lon < minLon) minLon = tempInfos.at(i).lon;
@@ -1226,15 +1261,44 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         }
     }
 
-    if(pgaInfos.count() != 0)
+    if(!pgaDetectInfos.isEmpty())
     {
-        PgaInfo *pgainfo = new PgaInfo;
-        pgainfo->setup(pgaChannel, pgaTime, pgaInfos);
-        ui->alertListVLO->addWidget(pgainfo);
+        QVector<_KGKIIS_GMPEAK_EVENT_STA_t> tempInfos;
 
-        for(int i=0;i<pgaInfos.count();i++)
+        for(int i=0;i<pgaDetectInfos.count();i++)
         {
-            drawPGAOnMap(pgaChannel, pgaInfos.at(i));
+            _KGKIIS_GMPEAK_EVENT_STA_t info = pgaDetectInfos.at(i);
+
+            if(tempInfos.isEmpty())
+            {
+                tempInfos.append(info);
+                continue;
+            }
+
+            bool inserted = false;
+
+            for(int j=0;j<tempInfos.size();j++)
+            {
+                _KGKIIS_GMPEAK_EVENT_STA_t tempinfo = tempInfos.at(j);
+                if(info.time < tempinfo.time)
+                {
+                    tempInfos.insert(j, info);
+                    inserted = true;
+                    break;
+                }
+            }
+
+            if(!inserted)
+                tempInfos.append(info);
+        }
+
+        for(int i=0;i<tempInfos.size();i++)
+        {
+            PgaAlertInfo *pgaAlertInfo = new PgaAlertInfo;
+            pgaAlertInfo->setup(tempInfos.at(i));
+            ui->alertListVLO->addWidget(pgaAlertInfo);
+
+            drawPGAOnMap(pgaInfos.at(i));
             if(pgaInfos.at(i).lat < minLat) minLat = pgaInfos.at(i).lat;
             if(pgaInfos.at(i).lat > maxLat) maxLat = pgaInfos.at(i).lat;
             if(pgaInfos.at(i).lon < minLon) minLon = pgaInfos.at(i).lon;
@@ -1242,7 +1306,23 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         }
     }
 
-    ui->alertListVLO->addStretch(1);
+    if(!pgaInfos.isEmpty())
+    {
+        PgaInfo *pgainfo = new PgaInfo;
+        pgainfo->setup(pgaTime, pgaInfos);
+        ui->alertListVLO->addWidget(pgainfo);
+
+        for(int i=0;i<pgaInfos.count();i++)
+        {
+            drawPGAOnMap(pgaInfos.at(i));
+            if(pgaInfos.at(i).lat < minLat) minLat = pgaInfos.at(i).lat;
+            if(pgaInfos.at(i).lat > maxLat) maxLat = pgaInfos.at(i).lat;
+            if(pgaInfos.at(i).lon < minLon) minLon = pgaInfos.at(i).lon;
+            if(pgaInfos.at(i).lon > maxLon) maxLon = pgaInfos.at(i).lon;
+        }
+    }
+
+    //ui->alertListVLO->addStretch(1);
 
     if(configure.myposition_lat < minLat) minLat = configure.myposition_lat;
     if(configure.myposition_lat > maxLat) maxLat = configure.myposition_lat;
@@ -1356,18 +1436,14 @@ void MainWindow::drawEEWOnMap(_EEWInfo eewInfo)
                               Q_ARG(QVariant, tempMag));
 }
 
-void MainWindow::drawPGAOnMap(QString chan, _KGKIIS_GMPEAK_EVENT_STA_t pgaInfo)
+void MainWindow::drawPGAOnMap(_KGKIIS_GMPEAK_EVENT_STA_t pgaInfo)
 {
     double lat, lon;
     lat = pgaInfo.lat;
     lon = pgaInfo.lon;
     QString pgaS;
 
-    if(chan.startsWith("Z")) pgaS = QString::number(pgaInfo.maxZ, 'f', 4);
-    else if(chan.startsWith("N")) pgaS = QString::number(pgaInfo.maxN, 'f', 4);
-    else if(chan.startsWith("E")) pgaS = QString::number(pgaInfo.maxE, 'f', 4);
-    else if(chan.startsWith("H")) pgaS = QString::number(pgaInfo.maxH, 'f', 4);
-    else if(chan.startsWith("T")) pgaS = QString::number(pgaInfo.maxT, 'f', 4);
+    pgaS = QString::number(pgaInfo.maxH, 'f', 4);
 
     QString text = QString(pgaInfo.sta) + "\n" + pgaS + " gal";
 
@@ -1449,19 +1525,19 @@ void MainWindow::setup()
         }
 
         // RealTime PGA
-        if(!krecvPGA->isRunning() && configure.kiss_pga_amq.topic != "")
+        if(!krecvQSCD->isRunning() && configure.kiss_pga_amq.topic != "")
         {
             QString failover = "failover:(tcp://" + configure.kiss_pga_amq.ip + ":" + configure.kiss_pga_amq.port + ")";
-            krecvPGA->setup(failover, configure.kiss_pga_amq.user, configure.kiss_pga_amq.passwd, configure.kiss_pga_amq.topic, true, false);
-            connect(krecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
-            krecvPGA->start();
+            krecvQSCD->setup(failover, configure.kiss_pga_amq.user, configure.kiss_pga_amq.passwd, configure.kiss_pga_amq.topic, true, false);
+            connect(krecvQSCD, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
+            krecvQSCD->start();
         }
         else if(configure.kiss_pga_amq.topic == "")
         {
             ui->mainTW->removeTab(2);
         }
 
-        krecvPGA->updateStation(configure.kissStaVT);
+        krecvQSCD->updateStation(configure.kissStaVT);
         krecvOnsite->updateStation(configure.kissStaVT);
         krecvSoh->updateStation(configure.kissStaVT, 1);
     }
@@ -1479,12 +1555,12 @@ void MainWindow::setup()
             lrecvOnsite->start();
         }
 
-        if(!lrecvPGA->isRunning() && configure.local_pga_amq.topic != "")
+        if(!lrecvQSCD->isRunning() && configure.local_pga_amq.topic != "")
         {
             QString failover = "failover:(tcp://" + configure.local_pga_amq.ip + ":" + configure.local_pga_amq.port + ")";
-            lrecvPGA->setup(failover, configure.local_pga_amq.user, configure.local_pga_amq.passwd, configure.local_pga_amq.topic, true, false);
-            connect(lrecvPGA, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
-            lrecvPGA->start();
+            lrecvQSCD->setup(failover, configure.local_pga_amq.user, configure.local_pga_amq.passwd, configure.local_pga_amq.topic, true, false);
+            connect(lrecvQSCD, SIGNAL(_rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)), this, SLOT(rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>)));
+            lrecvQSCD->start();
         }
 
         if(!lrecvSoh->isRunning() && configure.local_soh_amq.topic != "")
@@ -1495,7 +1571,7 @@ void MainWindow::setup()
             lrecvSoh->start();
         }
 
-        lrecvPGA->updateStation(configure.localStaVT);
+        lrecvQSCD->updateStation(configure.localStaVT);
         lrecvOnsite->updateStation(configure.localStaVT);
         lrecvSoh->updateStation(configure.localStaVT, 0);
     }
@@ -1708,6 +1784,7 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
         }
 
         //find pga
+        /*
         if(sMag == 0 && eMag == 0)
         {
             query = "SELECT * FROM pgaInfo WHERE evid = " + this->eventModel->record(i).value("evid").toString();
@@ -1715,16 +1792,8 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
 
             if(this->pgaModel->rowCount() > 0)
             {
-                if(this->pgaModel->record(0).value("target_chan").toString().startsWith("Z"))
-                    eewInfo.magnitude = this->pgaModel->record(0).value("maxZ").toDouble();
-                else if(this->pgaModel->record(0).value("target_chan").toString().startsWith("N"))
-                    eewInfo.magnitude = this->pgaModel->record(0).value("maxN").toDouble();
-                else if(this->pgaModel->record(0).value("target_chan").toString().startsWith("E"))
-                    eewInfo.magnitude = this->pgaModel->record(0).value("maxE").toDouble();
-                else if(this->pgaModel->record(0).value("target_chan").toString().startsWith("H"))
-                    eewInfo.magnitude = this->pgaModel->record(0).value("maxH").toDouble();
-                else if(this->pgaModel->record(0).value("target_chan").toString().startsWith("T"))
-                    eewInfo.magnitude = this->pgaModel->record(0).value("maxT").toDouble();
+                eewInfo.magnitude = this->pgaModel->record(0).value("maxH").toDouble();
+
 
                 eewInfo.latitude = this->pgaModel->record(0).value("lat").toDouble();
                 eewInfo.longitude = this->pgaModel->record(0).value("lon").toDouble();
@@ -1752,6 +1821,7 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
                                           Q_ARG(QVariant, eewInfo.evid));
             }
         }
+        */
     }
 
     if(eewInfos.count() != 0)
@@ -1784,6 +1854,7 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
         ui->sumDLB->setText("");
         ui->noEventLB->show();
     }
+
 }
 
 void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
@@ -1864,7 +1935,7 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
         blinkTimer->start(1000);
         eventMode = 1;
         maxMag = info.magnitude;
-        alerting(info.magnitude, dist);
+        magAlerting(info.magnitude, dist);
         blinkColor.setNamedColor(getMagColor(info.magnitude).name());
         ui->mainToolBar->actions().at(3)->setVisible(true);
 
@@ -1875,9 +1946,7 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
 
         if(this->isHidden())
             restoreAction->triggered();
-        //this->showMaximized();
-        //this->activateWindow();
-        //this->raise();
+
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
     }
@@ -1894,7 +1963,7 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
     getEventInfo(evid);
 }
 
-void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
+void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
 {
     int evid;
     QString query;
@@ -1903,38 +1972,32 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
     else
         evid = getLastEvid();
 
-    double avgLat = 0, avgLon = 0;
-
-    for(int i=0;i<pgaInfos.nsta;i++)
+    for(int i=0;i<pd.num;i++)
     {
-        query = "INSERT INTO pgaInfo "
+        _KGKIIS_GMPEAK_EVENT_STA_t tempSta = pd.staPGAList.at(i);
+        query = "INSERT INTO pgaDetectInfo "
                 "(evid, version, msg_type, sta, chan, net, loc, lat, lon, target_chan, e_time, time, maxZ, maxN, maxE, maxH, maxT, lddate) values (" +
-                QString::number(evid) + ", " + QString::number(pgaInfos.stainfo[i].version) + ", '" + QString(pgaInfos.stainfo[i].msg_type) + "', '" +
-                QString(pgaInfos.stainfo[i].sta) + "', '" + QString(pgaInfos.stainfo[i].chan) + "', '" +
-                QString(pgaInfos.stainfo[i].net) + "', '" + QString(pgaInfos.stainfo[i].loc) + "', " +
-                QString::number(pgaInfos.stainfo[i].lat, 'f', 4) + ", " + QString::number(pgaInfos.stainfo[i].lon, 'f', 4) + ", '" +
-                QString(pgaInfos.target_chan) + "', " + QString::number(pgaInfos.e_time, 'f', 0) + ", " +
-                QString::number(pgaInfos.stainfo[i].time, 'f', 0) + ", " + QString::number(pgaInfos.stainfo[i].maxZ, 'f', 4) + ", " +
-                QString::number(pgaInfos.stainfo[i].maxN, 'f', 4) + ", " + QString::number(pgaInfos.stainfo[i].maxE, 'f', 4) + ", " +
-                QString::number(pgaInfos.stainfo[i].maxH, 'f', 4) + ", " + QString::number(pgaInfos.stainfo[i].maxT, 'f', 4) + ", '" +
+                QString::number(evid) + ", 1, 'P', '" +
+                QString(tempSta.sta) + "', '" + QString(tempSta.chan) + "', '" +
+                QString(tempSta.net) + "', '" + QString(tempSta.loc) + "', " +
+                QString::number(tempSta.lat, 'f', 4) + ", " + QString::number(tempSta.lon, 'f', 4) + ", '" +
+                "H" + "', -1, " +
+                QString::number(tempSta.time, 'f', 0) + ", " + "-1" + ", " +
+                "-1" + ", " + "-1" + ", " +
+                QString::number(tempSta.maxH, 'f', 4) + ", " + "-1" + ", '" +
                 QDate::currentDate().toString("yyyyMMdd") + "')";
 
-        this->pgaModel->setQuery(query);
-
-        avgLat = avgLat + pgaInfos.stainfo[i].lat;
-        avgLon = avgLon + pgaInfos.stainfo[i].lon;
+        this->pgaDetectModel->setQuery(query);
     }
 
-    if(this->pgaModel->lastError().isValid())
+    if(this->pgaDetectModel->lastError().isValid())
     {
-        qDebug() << this->pgaModel->lastError();
+        qDebug() << this->pgaDetectModel->lastError();
         log->write(configure.KGOM_HOME + "/logs/", "Detected a new PGA info. But sql insert query error.");
         return;
     }
 
     log->write(configure.KGOM_HOME + "/logs/", "Detected a new PGA info.");
-
-    double dist = getDistance(avgLat / pgaInfos.nsta, avgLon / pgaInfos.nsta, configure.myposition_lat, configure.myposition_lon);
 
     if(eventMode == 0)
     {
@@ -1959,12 +2022,9 @@ void MainWindow::rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t pgaInfos)
         if(this->isHidden())
             restoreAction->triggered();
 
-        //this->showMaximized();
-        //this->activateWindow();
-        //this->raise();
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
-        alerting(900, dist);
+        pgaAlerting();
         blinkColor.setNamedColor(getMagColor(990).name());
     }
 
@@ -2046,16 +2106,13 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         blinkTimer->start(1000);
         eventMode = 1;
         maxMag = eewInfo.magnitude;
-        alerting(eewInfo.magnitude, dist);
+        magAlerting(eewInfo.magnitude, dist);
         blinkColor.setNamedColor(getMagColor(eewInfo.magnitude).name());
         ui->mainToolBar->actions().at(3)->setVisible(true);
 
         if(this->isHidden())
             restoreAction->triggered();
 
-        //this->showMaximized();
-        //this->activateWindow();
-        //this->raise();
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false); 
     }
@@ -2153,7 +2210,10 @@ void MainWindow::rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP> mmFromAMQ)
         {
             QString sta = configure.kissStaVT.at(j).sta;
             QString net = configure.kissStaVT.at(j).net;
+            QString chan = configure.kissStaVT.at(j).chan;
+            QString loc = configure.kissStaVT.at(j).loc;
             float hpga = i.value().hpga;
+
             int legendIndex;
             QDateTime dataTimeUTC, dataTimeKST;
             dataTimeUTC.setTimeSpec(Qt::UTC);
@@ -2191,6 +2251,69 @@ void MainWindow::rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP> mmFromAMQ)
                         sta.maxPGATime = dataTimeUTC.toTime_t();
                         configure.kissStaVT.replace(j, sta);
                     }
+                }
+
+                // check over threshold
+                if(hpga >= pgaDetection.threshold1)
+                {
+                    _KGKIIS_GMPEAK_EVENT_STA_t staPGA;
+                    strcpy(staPGA.sta, sta.toLatin1().constData());
+                    strcpy(staPGA.net, net.toLatin1().constData());
+                    strcpy(staPGA.chan, chan.toLatin1().constData());
+                    strcpy(staPGA.loc, loc.toLatin1().constData());
+                    staPGA.lat = configure.kissStaVT.at(j).lat;
+                    staPGA.lon = configure.kissStaVT.at(j).lon;
+
+                    staPGA.time = dataTimeUTC.toTime_t();
+                    staPGA.maxH = hpga;
+
+                    if(pgaDetection.num == 0)
+                    {
+                        pgaDetection.num++;
+                        pgaDetection.staPGAList.append(staPGA);
+                    }
+                    else
+                    {
+                        bool needInsertTime = false;
+                        bool needInsertStaName = true;
+
+                        _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.first();
+                        if(qAbs(tempStaPGA.time - staPGA.time) <= pgaDetection.timeWindow)
+                        {
+                            needInsertTime = true;
+                        }
+
+                        for(int k=0;k<pgaDetection.staPGAList.size();k++)
+                        {
+                            _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.at(k);
+
+                            if(QString(tempStaPGA.sta).startsWith(QString(staPGA.sta)) &&
+                                    QString(tempStaPGA.net).startsWith(QString(staPGA.net)))
+                            {
+                                needInsertStaName = false;
+                                break;
+                            }
+                        }
+
+                        if(!needInsertTime)
+                        {
+                            pgaDetection.num = 0;
+                            pgaDetection.staPGAList.clear();
+                            pgaDetection.num++;
+                            pgaDetection.staPGAList.append(staPGA);
+                        }
+                        else if(needInsertTime && needInsertStaName)
+                        {
+                            pgaDetection.num++;
+                            pgaDetection.staPGAList.append(staPGA);
+                        }
+                    }
+                }
+
+                // check pga detection for a event
+                if(pgaDetection.num >= pgaDetection.num_threshold && eventMode == 0)
+                {
+                    rvPGAInfos(pgaDetection);
                 }
             }
         }

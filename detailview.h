@@ -6,6 +6,7 @@
 #include "eewdetailtable.h"
 #include "onsitedetailtable.h"
 #include "pgadetailtable.h"
+#include "pgadetectdetailtable.h"
 
 #include <QDialog>
 
@@ -21,7 +22,7 @@ public:
     explicit DetailView(QWidget *parent = 0);
     ~DetailView();
 
-    void setup(QVector<_KGOnSite_Info_t>, QVector<_EEWInfo>, QString, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString, QString);
+    void setup(QVector<_KGOnSite_Info_t>, QVector<_EEWInfo>, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString, QString);
 
 private:
     Ui::DetailView *ui;

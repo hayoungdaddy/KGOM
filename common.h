@@ -57,11 +57,15 @@
 
 #define PI 3.14159265358979323846
 
+#define MAX_QSCD_CNT 100
+#define QSCD_LEN 120
+
+#define NUM_LEGEND 10
+
 static QString find_loc_program = "findLocC";
 
 static QDateTime convertKST(QDateTime oriTime)
 {
-    //oriTime.setTimeSpec(Qt::UTC);
     oriTime = oriTime.addSecs(3600 * 9);
     return oriTime;
 }
@@ -202,99 +206,16 @@ typedef struct _gmpeak_event_sta_t
     float maxT;
 } _KGKIIS_GMPEAK_EVENT_STA_t;
 
-typedef struct _gmpeak_event_t
+typedef struct _pga_detection
 {
-    int version;
-    char msg_type;
-
-    time_t e_time;
-
-    char target_chan;
-    int nsta;
-
-    _KGKIIS_GMPEAK_EVENT_STA_t stainfo[MAX_LOCALSTA_NUM];
-} _KGKIIS_GMPEAK_EVENT_t;
-
-typedef struct _kgonsite_sta_option_t
-{
-    int version ;
-
-    char msg_type ;                    // 'O' Option
-
-    char sta[STA_LEN];
-    char chan[CHAN_LEN];
-    char net[NET_LEN];
-    char loc[LOC_LEN];
-
-    float lat ;
-    float lon ;
-    float elev ;
-
-    char station_type ;                          // 'S' structure, 'F' freefield
-
-    char unit[ STR_MAX_LENGTH ] ;                      // M/S, M/S*S
-    int level ;
-
-    char sensor_name[ STR_MAX_LENGTH ] ;
-    char logger_name[ STR_MAX_LENGTH ] ;
-    char organization_name[ STR_MAX_LENGTH ] ;
-
-    double physical_factor ;
-
-    time_t report_time ;
-
-    char dummy[ STR_MAX_LENGTH ] ;
-} _KGOnSite_Sta_Option_t ;
-
-typedef struct _kgonsite_option_t
-{
-  int version ;
-
-  char msg_type ;                    // 'O' Option
-
-  char organization_name[ STR_MAX_LENGTH ] ;
-
-  float picker_filter_window ;
-  float picker_longterm_window ;
-  float picker_threshold1 ;
-  float picker_threshold2 ;
-  float picker_tUpEvent ;
-
-  int picker_pick_duration ;
-  int picker_trigpar_dur ;
-  int mean_packet_seconds ;
-
-  double onsite_p_secs ;
-  double onsite_secs_before_window ;
-
-  double onsite_low_fmin ;
-  double onsite_low_fmax ;
-
-  double onsite_high_fmin ;
-  double onsite_high_fmax ;
-
-  double onsite_disp_max_ratio ;
-  double onsite_disp_db_min ;
-
-  double onsite_log_disp_vel_high_max ;
-  double onsite_log_disp_vel_low_min ;
-  double onsite_log_disp_vel_low_max ;
-
-  double onsite_min_snr ;
-
-  double onsite_disp_threshold ;
-  double onsite_tauc_threshold ;
-  double onsite_vel_threshold ;
-  double onsite_disp_ratio_threshold ;
-
-  int    before_p_sample_count ;
-  int    onsite_seconds ;
-
-  time_t report_time ;
-
-  char dummy[ STR_MAX_LENGTH ] ;
-
-} _KGOnSite_Option_t ;
+    int num;
+    int num_threshold;
+    float threshold1;
+    float threshold2;
+    int timeWindow;
+    QList<_KGKIIS_GMPEAK_EVENT_STA_t> staPGAList;
+    int condition;
+} _PGA_DETECTION;
 
 typedef struct _station
 {
@@ -346,22 +267,30 @@ typedef struct _configure
     // Alert Level
     QString alarm_device_ip;
     int alarm_device_port;
-    int level1_alert_use;
-    float level1_alert_min_mag;
-    float level1_alert_max_mag;
-    int level1_alert_dist;
-    int level2_alert_use;
-    float level2_alert_min_mag;
-    float level2_alert_max_mag;
-    int level2_alert_dist;
+
+    int mag_level1_alert_use;
+    float mag_level1_alert_min_mag;
+    float mag_level1_alert_max_mag;
+    int mag_level1_alert_dist;
+
+    int mag_level2_alert_use;
+    float mag_level2_alert_min_mag;
+    float mag_level2_alert_max_mag;
+    int mag_level2_alert_dist;
+
+    int pga_level1_alert_use;
+    float pga_level1_threshold;
+
+    int pga_level2_alert_use;
+    float pga_level2_threshold;
+    int pga_num_sta_threshold;
+    int pga_time_window;
 
     double p_vel;
     double s_vel;
 } _CONFIGURE;
 
-#define DATA_TIME_DIFF 3
-#define MAX_QSCD_CNT 100
-#define QSCD_LEN 120
+
 
 typedef struct _qscd_struct
 {
@@ -558,8 +487,6 @@ static double getDistance(double lat1, double lon1, double lat2, double lon2)
     return dist;
 }
 
-
-#define NUM_LEGEND 10
 static     int     inten[NUM_LEGEND] = {    1,    2,      3,     4,     5,      6,      7,      8,      9,     10 };
 static QString intenText[NUM_LEGEND] = {  "I",  "II", "III",  "IV",   "V",   "VI",  "VII", "VIII",   "IX",    "X" };
 static  double  pgaValue[NUM_LEGEND] = { 0.97, 2.94,   4.90, 23.52, 65.66, 127.40, 235.20, 431.20, 813.40, 999999 };
@@ -646,7 +573,6 @@ static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATIO
         strncpy(net, QSCDBlock[i].LO, 2);
 
         bool isMyStation = false;
-        //int index = 0;
         QString sc, sc2;
 
         sc2 = QString(sta) + "/" + QString(net).left(2);
@@ -658,7 +584,6 @@ static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATIO
             if(sc.startsWith(sc2))
             {
                 isMyStation = true;
-                //index = j;
                 break;
             }
         }
@@ -668,7 +593,6 @@ static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATIO
             _QSCD_FOR_MULTIMAP qfmm;
             qfmm.sta = QString(sta);
             qfmm.net = QString(net).left(2);
-            //qDebug() << qfmm.net << qfmm.sta;
             SwapInt(&QSCDBlock[i].time);    // epoch time (GMT)
             SwapFloat(&QSCDBlock[i].HPGA);
             qfmm.hpga = QSCDBlock[i].HPGA;
@@ -678,6 +602,7 @@ static QMultiMap<int, _QSCD_FOR_MULTIMAP> convertMMap(char *msg, QVector<_STATIO
 
     return mmap;
 }
+
 
 
 #endif // COMMON_H

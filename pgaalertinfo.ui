@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>440</width>
-    <height>100</height>
+    <height>90</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>440</width>
-    <height>100</height>
+    <height>90</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>440</width>
-    <height>16777215</height>
+    <height>90</height>
    </size>
   </property>
   <property name="baseSize">
@@ -67,13 +67,13 @@
      <property name="minimumSize">
       <size>
        <width>440</width>
-       <height>100</height>
+       <height>90</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>440</width>
-       <height>16777215</height>
+       <height>90</height>
       </size>
      </property>
      <property name="baseSize">
@@ -126,13 +126,13 @@
           <property name="minimumSize">
            <size>
             <width>20</width>
-            <height>0</height>
+            <height>90</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
             <width>20</width>
-            <height>16777215</height>
+            <height>90</height>
            </size>
           </property>
           <property name="baseSize">
@@ -142,8 +142,9 @@
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">background-color: rgb(115, 210, 22);
-color: white;</string>
+           <string notr="true">background-color: rgb(252, 175, 62); 
+color: white
+</string>
           </property>
           <property name="text">
            <string>P
@@ -158,6 +159,9 @@ color: white;</string>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="spacing">
+           <number>5</number>
+          </property>
           <item>
            <layout class="QHBoxLayout" name="titleLO">
             <property name="spacing">
@@ -246,15 +250,15 @@ color: white;</string>
                  <property name="font">
                   <font>
                    <pointsize>12</pointsize>
-                   <weight>50</weight>
-                   <bold>false</bold>
+                   <weight>75</weight>
+                   <bold>true</bold>
                   </font>
                  </property>
                  <property name="styleSheet">
                   <string notr="true"/>
                  </property>
                  <property name="text">
-                  <string>최대지반가속도 정보</string>
+                  <string>PHA2</string>
                  </property>
                 </widget>
                </item>
@@ -308,7 +312,113 @@ color: white;</string>
            </layout>
           </item>
           <item>
-           <layout class="QGridLayout" name="bodyLO"/>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <property name="leftMargin">
+             <number>15</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>15</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="intenLB">
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>진도
+III</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>최대지반가속도 (gal)</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="pgaLB">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>

@@ -15,7 +15,7 @@ PgaInfo::~PgaInfo()
     delete ui;
 }
 
-void PgaInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos)
+void PgaInfo::setup(int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos)
 {
     QLabel *titleLB[4];
     for(int i=0;i<4;i++)
@@ -35,12 +35,7 @@ void PgaInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>
         QString pgaS;
         int legendIndex;
         QString styleSheet;
-
-        if(chan.startsWith("Z")) pgaS = QString::number(pgaInfos.at(i).maxZ, 'f', 4);
-        else if(chan.startsWith("N")) pgaS = QString::number(pgaInfos.at(i).maxN, 'f', 4);
-        else if(chan.startsWith("E")) pgaS = QString::number(pgaInfos.at(i).maxE, 'f', 4);
-        else if(chan.startsWith("H")) pgaS = QString::number(pgaInfos.at(i).maxH, 'f', 4);
-        else if(chan.startsWith("T")) pgaS = QString::number(pgaInfos.at(i).maxT, 'f', 4);
+        pgaS = QString::number(pgaInfos.at(i).maxH, 'f', 4);
 
         QFuture<int> future = QtConcurrent::run(getLegendIndex, pgaInfos.at(i).maxH);
         future.waitForFinished();
@@ -60,7 +55,6 @@ void PgaInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>
 
         pgaLB->setText(pgaS + " gal");
         pgaLB->setAlignment(Qt::AlignCenter);
-        //pgaLB->setStyleSheet(styleSheet);
 
         intenLB->setText(intenText[legendIndex]);
         intenLB->setAlignment(Qt::AlignCenter);
@@ -85,5 +79,4 @@ void PgaInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>
 
     tKST = convertKST(tUTC);
     ui->timeLB->setText(tKST.toString("yyyy-MM-dd hh:mm:ss"));
-    //ui->scnlLB->setText(codec->toUnicode("최대지반가속도(") + chan + ") 정보");
 }

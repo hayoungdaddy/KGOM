@@ -15,42 +15,28 @@ PgaAlertInfo::~PgaAlertInfo()
     delete ui;
 }
 
-void PgaAlertInfo::setup(QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos)
+void PgaAlertInfo::setup(_KGKIIS_GMPEAK_EVENT_STA_t staPGA)
 {
-    for(int i=0;i<pgaInfos.count();i++)
-    {
-        QString pgaS;
-        if(chan.startsWith("Z")) pgaS = QString::number(pgaInfos.at(i).maxZ, 'f', 4);
-        else if(chan.startsWith("N")) pgaS = QString::number(pgaInfos.at(i).maxN, 'f', 4);
-        else if(chan.startsWith("E")) pgaS = QString::number(pgaInfos.at(i).maxE, 'f', 4);
-        else if(chan.startsWith("H")) pgaS = QString::number(pgaInfos.at(i).maxH, 'f', 4);
-        else if(chan.startsWith("T")) pgaS = QString::number(pgaInfos.at(i).maxT, 'f', 4);
+    QString pgaS = QString::number(staPGA.maxH, 'f', 4);
 
-        QLabel *staNameLB = new QLabel;
-        QLabel *pgaLB = new QLabel;
-        QLabel *timeLB = new QLabel;
-        //staNameLB->setText(QString(pgaInfos.at(i).sta)+"/"+QString(pgaInfos.at(i).chan)+"/"+QString(pgaInfos.at(i).net)+"/"+QString(pgaInfos.at(i).loc));
-        staNameLB->setText(QString(pgaInfos.at(i).sta));
-        staNameLB->setAlignment(Qt::AlignCenter);
-        pgaLB->setText(pgaS + " gal");
-        pgaLB->setAlignment(Qt::AlignCenter);
-        QDateTime tUTC, tKST;
-        tUTC.setTimeSpec(Qt::UTC);
-        tUTC.setTime_t(pgaInfos.at(i).time);
-
-        tKST = convertKST(tUTC);
-        timeLB->setText(tKST.toString("hh:mm:ss"));
-        timeLB->setAlignment(Qt::AlignCenter);
-        ui->bodyLO->addWidget(staNameLB, i, 0);
-        ui->bodyLO->addWidget(pgaLB, i, 1);
-        ui->bodyLO->addWidget(timeLB, i, 2);
-    }
+    ui->scnlLB->setText(QString(staPGA.net) + "/" + QString(staPGA.sta));
+    ui->pgaLB->setText(pgaS + " gal");
 
     QDateTime tUTC, tKST;
     tUTC.setTimeSpec(Qt::UTC);
-    tUTC.setTime_t(eTime);
+    tUTC.setTime_t(staPGA.time);
 
     tKST = convertKST(tUTC);
-    ui->timeLB->setText(tKST.toString("yyyy-MM-dd hh:mm:ss"));
-    ui->scnlLB->setText(codec->toUnicode("최대지반가속도(") + chan + ") 정보");
+    ui->timeLB->setText(tKST.toString("hh:mm:ss"));
+
+    int legendIndex = getLegendIndex(staPGA.maxH);
+
+    QString styleSheet;
+    styleSheet = "background-color: " + pgaColor[legendIndex].name() + ";color: black;";
+    if(legendIndex >= 7)
+        styleSheet = "background-color: " + pgaColor[legendIndex].name() + ";color: white;";
+
+    ui->intenLB->setText(codec->toUnicode("진도") + "\n" + intenText[legendIndex]);
+    ui->intenLB->setStyleSheet(styleSheet);
+    ui->pgaLB->setStyleSheet(styleSheet);
 }

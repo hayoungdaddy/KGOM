@@ -19,7 +19,7 @@ public:
     explicit PgaDetailTable(QWidget *parent = 0);
     ~PgaDetailTable();
 
-    void setup(QString, QString, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString, QString, double, double);
+    void setup(QString, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString, QString, double, double);
 
 private:
     Ui::PgaDetailTable *ui;

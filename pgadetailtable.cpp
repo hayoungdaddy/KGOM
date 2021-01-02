@@ -13,7 +13,7 @@ PgaDetailTable::~PgaDetailTable()
     delete ui;
 }
 
-void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid, QString homeDir, double evLat, double evLon)
+void PgaDetailTable::setup(QString title, int eTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid, QString homeDir, double evLat, double evLon)
 {
     ui->titleLB->setText(title);
     ui->pgaTW->setRowCount(0);
@@ -21,20 +21,17 @@ void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKI
     for(int i=0;i<pgaInfos.count();i++)
     {
         ui->pgaTW->setRowCount(ui->pgaTW->rowCount()+1);
-        //ui->pgaTW->setItem(i, 0, new QTableWidgetItem(QString::number(pgaInfos.at(i).version)));
-        //ui->pgaTW->setItem(i, 1, new QTableWidgetItem(QString(pgaInfos.at(i).msg_type)));
         ui->pgaTW->setItem(i, 1, new QTableWidgetItem(QString(pgaInfos.at(i).sta)));
         ui->pgaTW->setItem(i, 2, new QTableWidgetItem(QString(pgaInfos.at(i).chan)));
         ui->pgaTW->setItem(i, 0, new QTableWidgetItem(QString(pgaInfos.at(i).net)));
-        //ui->pgaTW->setItem(i, 5, new QTableWidgetItem(QString(pgaInfos.at(i).loc)));
         ui->pgaTW->setItem(i, 3, new QTableWidgetItem(QString::number(pgaInfos.at(i).lat, 'f', 4)));
         ui->pgaTW->setItem(i, 4, new QTableWidgetItem(QString::number(pgaInfos.at(i).lon, 'f', 4)));
-        ui->pgaTW->setItem(i, 5, new QTableWidgetItem(QString::number(pgaInfos.at(i).time, 'f', 0)));
-        //ui->pgaTW->setItem(i, 9, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxZ, 'f', 4)));
-        //ui->pgaTW->setItem(i, 10, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxN, 'f', 4)));
-        //ui->pgaTW->setItem(i, 11, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxE, 'f', 4)));
+        QDateTime timeUTC, timeKST;
+        timeUTC.setTimeSpec(Qt::UTC);
+        timeUTC.setTime_t(pgaInfos.at(i).time);
+        timeKST = convertKST(timeUTC);
+        ui->pgaTW->setItem(i, 5, new QTableWidgetItem(timeKST.toString("hh:mm:ss")));
         ui->pgaTW->setItem(i, 6, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxH, 'f', 4)));
-        //ui->pgaTW->setItem(i, 13, new QTableWidgetItem(QString::number(pgaInfos.at(i).maxT, 'f', 4)));
     }
 
     for(int i=0;i<ui->pgaTW->rowCount();i++)
@@ -45,7 +42,7 @@ void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKI
         }
     }
 
-    ui->pgaTW->setFixedHeight(30*pgaInfos.count() + 40);
+    ui->pgaTW->setFixedHeight(30*pgaInfos.count() + 23);
 
     QString path;
     QDateTime evTime;
@@ -66,6 +63,11 @@ void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKI
                 maxPGA = pgaInfos.at(i).maxH;
         }
 
+        for(int i=0;i<pgaInfos.count();i++)
+        {
+            drawPGAChart(path, pgaInfos.at(i).net, pgaInfos.at(i).sta, 0, maxPGA);
+        }
+        /*
         if(evLat == 0 && evLon == 0)
         {
             for(int i=0;i<pgaInfos.count();i++)
@@ -117,6 +119,7 @@ void PgaDetailTable::setup(QString title, QString chan, int eTime, QVector<_KGKI
                 drawPGAChart(path, pgaInfos.at(sortedIndex.at(i)).net, pgaInfos.at(sortedIndex.at(i)).sta, sortedDist.at(i), maxPGA);
             }
         }
+        */
 
         ui->chartFrame->setMinimumHeight(300*pgaInfos.count());
     }
@@ -138,12 +141,6 @@ void PgaDetailTable::drawPGAChart(QString path, QString net, QString sta, double
     QDateTime local(QDateTime::currentDateTime());
     QDateTime UTC(QDateTime::currentDateTimeUtc());
     QDateTime dt(UTC.date(), UTC.time(), Qt::LocalTime);
-
-    /*
-    qDebug() << local.secsTo(UTC);
-    qDebug() << local.secsTo(dt);
-    qDebug() << dt.secsTo(local);
-    */
 
     QFile pgaFile(path + "/" + net + "_" + sta);
     if(!pgaFile.exists())

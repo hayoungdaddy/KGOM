@@ -317,84 +317,6 @@ void RecvOnsiteMessage::cleanUp()
 }
 
 
-RecvPGAMessage::RecvPGAMessage(QWidget *parent)
-{
-}
-
-RecvPGAMessage::~RecvPGAMessage()
-{
-    cleanUp();
-}
-
-void RecvPGAMessage::cleanUp()
-{
-    if (connection != nullptr)
-        connection->close();
-
-    delete destination;
-    destination = nullptr;
-    delete consumer;
-    consumer = nullptr;
-    delete session;
-    session = nullptr;
-    delete connection;
-}
-
-void RecvPGAMessage::setup(QString qBrokerURI, QString qID, QString qPW, QString qTopic, bool useTopic, bool clientAck)
-{
-    auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory( qBrokerURI.toStdString() ));
-
-    if(qID == "" || qPW == "")
-        connection = connectionFactory->createConnection();
-    else
-        connection = connectionFactory->createConnection(qID.toStdString(), qPW.toStdString());
-
-    connection->start();
-
-    // Create a Session
-    if( clientAck ) {
-        session = connection->createSession( Session::CLIENT_ACKNOWLEDGE );
-    } else {
-        session = connection->createSession( Session::AUTO_ACKNOWLEDGE );
-    }
-
-    useTopic = true;
-
-    // Create the destination (Topic or Queue)
-    if( useTopic ) {
-        destination = session->createTopic( qTopic.toStdString() );
-    } else {
-        destination = session->createQueue( qTopic.toStdString() );
-    }
-
-    consumer = session->createConsumer (destination);
-}
-
-void RecvPGAMessage::run()
-{    
-    while (this->isRunning())
-    {
-        if(this->isInterruptionRequested())
-            this->quit();
-
-        auto_ptr<Message> message ( consumer->receive() );
-        if( message.get() != nullptr )
-        {
-            const BytesMessage *b = dynamic_cast< const BytesMessage* >( message.get() );
-            char *msg = (char *)b->getBodyBytes();
-
-            _KGKIIS_GMPEAK_EVENT_t _myPGA;
-            memcpy(&_myPGA, msg, sizeof(_myPGA));
-            if(_myPGA.msg_type == MSG_TYPE_GMPEAK_EVENT)
-            {
-                emit _rvPGAInfo(_myPGA);
-            }
-            free(msg);
-        }
-    }
-}
-
-
 RecvSOHMessage::RecvSOHMessage(QWidget *parent)
 {
 }
@@ -496,16 +418,16 @@ void RecvSOHMessage::cleanUp()
     delete connection;
 }
 
-RecvRealTimePGAMessage::RecvRealTimePGAMessage(QWidget *parent)
+RecvQSCD20Message::RecvQSCD20Message(QWidget *parent)
 {
 }
 
-RecvRealTimePGAMessage::~RecvRealTimePGAMessage()
+RecvQSCD20Message::~RecvQSCD20Message()
 {
     cleanUp();
 }
 
-void RecvRealTimePGAMessage::setup(QString qBrokerURI, QString qID, QString qPW, QString qTopic, bool useTopic, bool clientAck)
+void RecvQSCD20Message::setup(QString qBrokerURI, QString qID, QString qPW, QString qTopic, bool useTopic, bool clientAck)
 {
     auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory( qBrokerURI.toStdString() ) );
 
@@ -534,12 +456,12 @@ void RecvRealTimePGAMessage::setup(QString qBrokerURI, QString qID, QString qPW,
     consumer = session->createConsumer (destination);
 }
 
-void RecvRealTimePGAMessage::updateStation(QVector<_STATION> staVT)
+void RecvQSCD20Message::updateStation(QVector<_STATION> staVT)
 {
     stationVT = staVT;
 }
 
-void RecvRealTimePGAMessage::run()
+void RecvQSCD20Message::run()
 {
     while (this->isRunning())
     {
@@ -562,7 +484,7 @@ void RecvRealTimePGAMessage::run()
     }
 }
 
-void RecvRealTimePGAMessage::cleanUp()
+void RecvQSCD20Message::cleanUp()
 {
     if (connection != nullptr)
         connection->close();

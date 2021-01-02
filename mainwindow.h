@@ -11,6 +11,7 @@
 #include "onsiteinfo.h"
 #include "eewinfo.h"
 #include "pgainfo.h"
+#include "pgaalertinfo.h"
 #include "searchform.h"
 #include "regends.h"
 #include "detailview.h"
@@ -53,7 +54,6 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    void resizeEvent(QResizeEvent *);
 
 private:
     Ui::MainWindow *ui;
@@ -69,9 +69,9 @@ private:
     RecvEEWMessage *krecveew;
     RecvOnsiteMessage *krecvOnsite;
     RecvSOHMessage *krecvSoh;
-    RecvRealTimePGAMessage *krecvPGA;
+    RecvQSCD20Message *krecvQSCD;
     RecvOnsiteMessage *lrecvOnsite;
-    RecvRealTimePGAMessage *lrecvPGA;
+    RecvQSCD20Message *lrecvQSCD;
     RecvSOHMessage *lrecvSoh;
 
     // Search form widget
@@ -134,6 +134,7 @@ private:
     QSqlQueryModel *onsiteModel;
     QSqlQueryModel *pgaModel;
     QSqlQueryModel *eewModel;
+    QSqlQueryModel *pgaDetectModel;
     void setEventsTab(double, double, int, int, int, QDate, QDate);
 
     // About event
@@ -144,7 +145,9 @@ private:
     QTimer *blinkTimer;
     ControlAlarm *controlAlarm;
     int getLastEvid();
-    void alerting(double, double);
+    void magAlerting(double, double);
+    void pgaAlerting();
+    _PGA_DETECTION pgaDetection;
 
     // About animations
     QDateTime endTimeP, endTimeS;
@@ -159,7 +162,7 @@ private:
     // draw circle, marker on map
     void drawEEWOnMap(_EEWInfo);
     void drawOnsiteOnMap(int, _KGOnSite_Info_t);
-    void drawPGAOnMap(QString, _KGKIIS_GMPEAK_EVENT_STA_t);
+    void drawPGAOnMap(_KGKIIS_GMPEAK_EVENT_STA_t);
     void drawIntensityOnMap(QString, QString);
 
     // for RealTime PGA
@@ -172,7 +175,7 @@ private:
 private slots:
     void setup();
     void getEventInfo(int);
-    void setAlertTab(QVector<_KGOnSite_Info_t>, QVector<_EEWInfo>, QString, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString);
+    void setAlertTab(QVector<_KGOnSite_Info_t>, QVector<_EEWInfo>, int, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QVector<_KGKIIS_GMPEAK_EVENT_STA_t>, QString);
     void showViewDetail();
 
     // action slots
@@ -185,7 +188,7 @@ private slots:
     void rvEEWInfo(_EEWInfo);
     void rvOnsiteInfo(_KGOnSite_Info_t);
     void rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP>);
-    void rvPGAInfo(_KGKIIS_GMPEAK_EVENT_t);
+    void rvPGAInfos(_PGA_DETECTION);
     void rvSOHInfo(_KGOnSite_SOH_t, int, int);
     void recvSOHfromWG(int, QString, QString);
 

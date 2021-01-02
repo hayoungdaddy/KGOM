@@ -91,11 +91,6 @@ QTableView::item {
      </attribute>
      <column>
       <property name="text">
-       <string>type</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>eew_evid</string>
       </property>
      </column>

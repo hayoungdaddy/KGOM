@@ -18,14 +18,14 @@ DetailView::~DetailView()
 }
 
 void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> eewInfos,
-                       QString pgaChannel, int pgaTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid, QString homeDir)
+                       QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaDetectInfos, int pgaTime, QVector<_KGKIIS_GMPEAK_EVENT_STA_t> pgaInfos, QString evid, QString homeDir)
 {
     ui->titleLB->setText("EVENT ID : " + evid);
 
     _EEWInfo summaryInfo;
 
     // set summary
-    if(eewInfos.count() != 0)
+    if(!eewInfos.isEmpty())
         summaryInfo = eewInfos.first();
     else
     {
@@ -153,11 +153,7 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
         QString stdout = process.readAllStandardOutput();
         ui->locLB->setText(stdout.section("\n", 0, 0));
         QString pgaS, realChannel;
-        if(pgaChannel.startsWith("Z")) { pgaS = QString::number(pgaInfos.at(0).maxZ, 'f', 4); realChannel = "Up/Down"; }
-        else if(pgaChannel.startsWith("N")) { pgaS = QString::number(pgaInfos.at(0).maxN, 'f', 4); realChannel = "North/South"; }
-        else if(pgaChannel.startsWith("E")) { pgaS = QString::number(pgaInfos.at(0).maxE, 'f', 4); realChannel = "East/West"; }
-        else if(pgaChannel.startsWith("H")) { pgaS = QString::number(pgaInfos.at(0).maxH, 'f', 4); realChannel = "Horizontal"; }
-        else if(pgaChannel.startsWith("T")) { pgaS = QString::number(pgaInfos.at(0).maxT, 'f', 4); realChannel = "Total"; }
+        realChannel = "Horizontal";
         ui->magLB->setText(pgaS);
         ui->magNameLB->setText("gal(" + realChannel + ") :");
         ui->mag1LB->hide();
@@ -176,7 +172,7 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
 
     int count = 0;
 
-    if(eewInfos.count() != 0)
+    if(!eewInfos.isEmpty())
     {
         count ++;
         EewDetailTable *eewdetailtable = new EewDetailTable;
@@ -188,7 +184,7 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
         ui->detailLO->addSpacerItem(spacer);
     }
 
-    if(onsiteInfos.count() != 0)
+    if(!onsiteInfos.isEmpty())
     {
         while(!onsiteInfos.isEmpty())
         {
@@ -218,7 +214,15 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
         ui->detailLO->addSpacerItem(spacer);
     }
 
-    if(pgaInfos.count() != 0)
+    if(!pgaDetectInfos.isEmpty())
+    {
+        count ++;
+        PgaDetectDetailTable *pgadetectdetailtable = new PgaDetectDetailTable;
+        pgadetectdetailtable->setup(QString::number(count) + codec->toUnicode(". 최대지반가속도(최초값) 정보"), pgaDetectInfos);
+        ui->detailLO->addWidget(pgadetectdetailtable);
+    }
+
+    if(!pgaInfos.isEmpty())
     {
         count ++;
         PgaDetailTable *pgadetailtable = new PgaDetailTable;
@@ -229,7 +233,7 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
             evlon = eewInfos.first().longitude;
         }
 
-        pgadetailtable->setup(QString::number(count) + codec->toUnicode(". 최대지반가속도 정보"), pgaChannel, pgaTime, pgaInfos, evid, homeDir, evlat, evlon);
+        pgadetailtable->setup(QString::number(count) + codec->toUnicode(". 최대지반가속도(최대값) 정보"), pgaTime, pgaInfos, evid, homeDir, evlat, evlon);
         ui->detailLO->addWidget(pgadetailtable);
     }
 

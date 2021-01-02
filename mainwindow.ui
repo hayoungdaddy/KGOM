@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">
@@ -618,7 +618,7 @@ QWidget { /* sets background color for every widget */
             <item>
              <widget class="QScrollArea" name="scrollArea">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+               <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -652,9 +652,21 @@ QWidget { /* sets background color for every widget */
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>460</width>
-                 <height>196</height>
+                 <width>16</width>
+                 <height>641</height>
                 </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>1</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_7">
                 <property name="spacing">
@@ -675,13 +687,13 @@ QWidget { /* sets background color for every widget */
                 <item>
                  <layout class="QVBoxLayout" name="alertListVLO">
                   <property name="spacing">
-                   <number>10</number>
+                   <number>5</number>
                   </property>
                   <property name="leftMargin">
                    <number>5</number>
                   </property>
                   <property name="topMargin">
-                   <number>10</number>
+                   <number>5</number>
                   </property>
                   <property name="rightMargin">
                    <number>5</number>
@@ -832,7 +844,7 @@ QWidget { /* sets background color for every widget */
                 <number>5</number>
                </property>
                <property name="rightMargin">
-                <number>0</number>
+                <number>10</number>
                </property>
                <property name="bottomMargin">
                 <number>5</number>
@@ -919,13 +931,13 @@ QWidget { /* sets background color for every widget */
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>25</height>
                   </size>
                  </property>
@@ -1023,13 +1035,13 @@ QWidget { /* sets background color for every widget */
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>25</height>
                   </size>
                  </property>
@@ -1057,13 +1069,13 @@ QWidget { /* sets background color for every widget */
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1073,12 +1085,17 @@ QWidget { /* sets background color for every widget */
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: rgb(211, 215, 207);
-color: white;</string>
+                  <string notr="true">background-color: rgb(215, 236, 255);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>1</string>
+                  <string>I</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1095,13 +1112,13 @@ color: white;</string>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1111,13 +1128,17 @@ color: white;</string>
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #BFCCFF;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(165, 221, 249);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>2</string>
+                  <string>II</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1134,13 +1155,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1150,13 +1171,17 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #A0E6FF;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(146, 208, 80);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>3</string>
+                  <string>III</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1173,13 +1198,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1189,13 +1214,17 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #80FFFF;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(255, 255, 0);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>4</string>
+                  <string>IV</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1212,13 +1241,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1228,13 +1257,17 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #7AFF93;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(255, 192, 0);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>5</string>
+                  <string>V</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1251,13 +1284,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1267,11 +1300,17 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #FFFF00;</string>
+                  <string notr="true">background-color: rgb(255, 0, 0);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>6</string>
+                  <string>VI</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1288,13 +1327,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1304,13 +1343,17 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #FFC800;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(163, 39, 119);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>7</string>
+                  <string>VII</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1327,13 +1370,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1343,13 +1386,18 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #FF9100;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(99, 37, 35);
+color: rgb(255, 255, 255);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>8</string>
+                  <string>VIII</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1366,13 +1414,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1382,13 +1430,18 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #FF0000;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(76, 38, 0);
+color: rgb(255, 255, 255);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>9</string>
+                  <string>IX</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1405,13 +1458,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>30</width>
+                   <width>32</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1421,13 +1474,18 @@ color: white;
                    <height>30</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #C80000;
-color: white;
-</string>
+                  <string notr="true">background-color: rgb(0, 0, 0);
+color: rgb(255, 255, 255);
+border: 1px solid black;</string>
                  </property>
                  <property name="text">
-                  <string>10+</string>
+                  <string>X+</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1442,250 +1500,6 @@ color: white;
                  <property name="sizeHint" stdset="0">
                   <size>
                    <width>47</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QFrame" name="frame_2">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>460</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(243, 243, 243);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_7">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>2</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>2</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="label_14">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>110</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>110</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>    현장경보수준</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_15">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-color: #CCCCCC;
-color: white;</string>
-                 </property>
-                 <property name="text">
-                  <string>0</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_16">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-color: #46BFBD;
-color: white;
-</string>
-                 </property>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_17">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-color: #FDB45C;
-color: white;
-</string>
-                 </property>
-                 <property name="text">
-                  <string>2</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_18">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>30</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-color: #F7464A;
-color: white;
-</string>
-                 </property>
-                 <property name="text">
-                  <string>3</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_11">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>227</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -1734,7 +1548,7 @@ color: white;
                 <number>2</number>
                </property>
                <property name="rightMargin">
-                <number>0</number>
+                <number>10</number>
                </property>
                <property name="bottomMargin">
                 <number>9</number>
@@ -1749,13 +1563,13 @@ color: white;
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>0</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>110</width>
+                   <width>100</width>
                    <height>16777215</height>
                   </size>
                  </property>
@@ -1789,7 +1603,7 @@ color: white;
 color: white;</string>
                  </property>
                  <property name="text">
-                  <string>O</string>
+                  <string>P</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1807,13 +1621,13 @@ color: white;</string>
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
-                   <height>30</height>
+                   <height>0</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>30</height>
+                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="font">
@@ -1825,7 +1639,11 @@ color: white;</string>
                   <string notr="true"/>
                  </property>
                  <property name="text">
-                  <string>현장경보</string>
+                  <string>최대지반가속도
+(최초값)</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -1885,7 +1703,11 @@ color: white;</string>
                   </font>
                  </property>
                  <property name="text">
-                  <string>최대지반가속도</string>
+                  <string>최대지반가속도
+(최대값)</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -1939,13 +1761,13 @@ color: white</string>
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
-                   <height>30</height>
+                   <height>0</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>30</height>
+                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="font">
@@ -1957,7 +1779,11 @@ color: white</string>
                   <string notr="true"/>
                  </property>
                  <property name="text">
-                  <string>지진관측망 조기경보</string>
+                  <string>지진관측망
+조기경보</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -2190,10 +2016,11 @@ QHeaderView::section {
                   </font>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: rgb(255, 255, 0);</string>
+                  <string notr="true">background-color: rgb(255, 255, 0);
+background-color: rgb(255, 192, 0);</string>
                  </property>
                  <property name="text">
-                  <string>↓황색경보</string>
+                  <string>↓주황색경보</string>
                  </property>
                 </widget>
                </item>
