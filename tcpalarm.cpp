@@ -33,6 +33,9 @@ bool TcpAlarm::conn(string address, int port)
     }
     else    {   /* OK , nothing */  }
 
+    if(sock == -1)
+        return false;
+
     //setup address structure
     if(inet_addr(address.c_str()) == -1)
     {

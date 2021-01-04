@@ -61,6 +61,11 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
     QString stdout = process.readAllStandardOutput();
     ui->locLB->setText(stdout.section("\n", 0, 0));
     ui->magLB->setText(QString::number(summaryInfo.magnitude, 'f', 1));
+    ui->magNameLB->setText("규모:");
+    ui->mag1LB->show();
+    ui->mag2LB->show();
+    ui->mag3LB->show();
+    ui->mag4LB->show();
 
     QPixmap pm(70, 70);
     pm.fill();
@@ -146,16 +151,17 @@ void DetailView::setup(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> 
         dtUTC.setTime_t(pgaInfos.at(0).time);
         dtKST = convertKST(dtUTC);
         ui->timeLB->setText(dtKST.toString("yyyy-MM-dd hh:mm:ss"));
-        QProcess process;
-        QString cmd = homeDir + "/bin/" + find_loc_program + " " + QString::number(pgaInfos.at(0).lat, 'f', 4) + " " + QString::number(pgaInfos.at(0).lon, 'f', 4);
-        process.start(cmd);
-        process.waitForFinished(-1); // will wait forever until finished
-        QString stdout = process.readAllStandardOutput();
-        ui->locLB->setText(stdout.section("\n", 0, 0));
-        QString pgaS, realChannel;
-        realChannel = "Horizontal";
+
+        ui->locLB->setText(codec->toUnicode("최대지반가속도에 의한 이벤트 감지"));
+        float maxPGA = 0;
+        for(int i=0;i<pgaDetectInfos.size();i++)
+        {
+            if(pgaDetectInfos.at(i).maxH >= maxPGA)
+                maxPGA = pgaDetectInfos.at(i).maxH;
+        }
+        QString pgaS = QString::number(maxPGA, 'f', 1);
         ui->magLB->setText(pgaS);
-        ui->magNameLB->setText("gal(" + realChannel + ") :");
+        ui->magNameLB->setText(codec->toUnicode("최대지반가속도:"));
         ui->mag1LB->hide();
         ui->mag2LB->hide();
         ui->mag3LB->hide();

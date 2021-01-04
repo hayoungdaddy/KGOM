@@ -350,7 +350,7 @@ void MainWindow::eventReplayPBClicked()
     QString cmd;
     cmd = configure.KGOM_HOME + "/bin/KGOM_Replayer " + configure.KGOM_HOME + "/data/KGOM.db" + " " + ui->evidLB->text().section(":", 1, 1) + " " +
             QString::number(configure.myposition_lat, 'f', 6) + " " + QString::number(configure.myposition_lon, 'f', 6) + " " +
-            QString::number(configure.p_vel, 'f', 4) + " " + QString::number(configure.s_vel, 'f', 4) + " " + configure.KGOM_HOME + "/data/INTENSITY" + " &";
+            QString::number(configure.p_vel, 'f', 4) + " " + QString::number(configure.s_vel, 'f', 4) + " " + configure.KGOM_HOME + "/data/INTENSITY" + " > /dev/null 2>&1 &";
 
     system(cmd.toLatin1().constData());
 }
@@ -1145,6 +1145,7 @@ void MainWindow::getEventInfo(int evid)
 
     setAlertTab(onsiteInfos, eewInfos, pgaTime, pgaDetectInfos, pgaInfos, evidS);
     detailview->setup(onsiteInfos, eewInfos, pgaDetectInfos, pgaTime, pgaInfos, evidS, configure.KGOM_HOME);
+
 }
 
 void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEWInfo> eewInfos,
@@ -1193,6 +1194,8 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         drawEEWOnMap(eewInfos.first());
         ui->replayPB->show();
     }
+    else
+        ui->replayPB->hide();
 
     if(!onsiteInfos.isEmpty())
     {
@@ -1298,11 +1301,13 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
             pgaAlertInfo->setup(tempInfos.at(i));
             ui->alertListVLO->addWidget(pgaAlertInfo);
 
+            /*
             drawPGAOnMap(pgaInfos.at(i));
             if(pgaInfos.at(i).lat < minLat) minLat = pgaInfos.at(i).lat;
             if(pgaInfos.at(i).lat > maxLat) maxLat = pgaInfos.at(i).lat;
             if(pgaInfos.at(i).lon < minLon) minLon = pgaInfos.at(i).lon;
             if(pgaInfos.at(i).lon > maxLon) maxLon = pgaInfos.at(i).lon;
+            */
         }
     }
 
@@ -1786,18 +1791,15 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
             continue;
         }
 
-        //find pga
-        /*
+        //find pga if don't have network earthquake
         if(sMag == 0 && eMag == 0)
         {
-            query = "SELECT * FROM pgaInfo WHERE evid = " + this->eventModel->record(i).value("evid").toString();
+            query = "SELECT * FROM pgaDetectInfo WHERE evid = " + this->eventModel->record(i).value("evid").toString();
             this->pgaModel->setQuery(query);
 
-            if(this->pgaModel->rowCount() > 0)
+            if(this->pgaModel->rowCount() > 0) // use first row
             {
                 eewInfo.magnitude = this->pgaModel->record(0).value("maxH").toDouble();
-
-
                 eewInfo.latitude = this->pgaModel->record(0).value("lat").toDouble();
                 eewInfo.longitude = this->pgaModel->record(0).value("lon").toDouble();
                 eewInfo.origin_time = this->pgaModel->record(0).value("time").toDouble();
@@ -1824,10 +1826,9 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
                                           Q_ARG(QVariant, eewInfo.evid));
             }
         }
-        */
     }
 
-    if(eewInfos.count() != 0)
+    if(!eewInfos.isEmpty())
     {
         ui->noEventLB->hide();
         ui->eventsListVLO->addStretch(1);

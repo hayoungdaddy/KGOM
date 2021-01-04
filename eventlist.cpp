@@ -17,6 +17,8 @@ EventList::EventList(int mode, _EEWInfo eewInfo, QString hd, QString homeDir, QW
     ui->latLB->setText(QString::number(eewInfo.latitude, 'f', 4));
     ui->lonLB->setText(QString::number(eewInfo.longitude, 'f', 4));
 
+    codec = QTextCodec::codecForName("utf-8");
+
     QColor magColor = getMagColor(eewInfo.magnitude);
 
     QPixmap pm(80,80);
@@ -42,7 +44,7 @@ EventList::EventList(int mode, _EEWInfo eewInfo, QString hd, QString homeDir, QW
         p.setBrush(QBrush(Qt::red));
         p.drawEllipse(10, 10, 60, 60);
         p.setFont(QFont("Open Sans", 11, QFont::Bold));
-        p.drawText(pm.rect(), Qt::AlignCenter, QString::number(eewInfo.magnitude, 'f', 0) + " gal");
+        p.drawText(pm.rect(), Qt::AlignCenter, QString::number(eewInfo.magnitude, 'f', 1) + " gal");
     }
 
     ui->magLB->setPixmap(pm);
@@ -63,6 +65,12 @@ EventList::EventList(int mode, _EEWInfo eewInfo, QString hd, QString homeDir, QW
     QString stdout = process.readAllStandardOutput();
 
     ui->locLB->setText(stdout);
+
+    if(mode == 1)
+    {
+        ui->locLB->setText(codec->toUnicode("최대지반가속도에 의한 이벤트 감지"));
+        ui->hdLB->setText("");
+    }
 }
 
 EventList::~EventList()

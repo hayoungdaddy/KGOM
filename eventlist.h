@@ -23,6 +23,8 @@ public:
 private:
     Ui::EventList *ui;
 
+    QTextCodec *codec;
+
 signals:
     void clicked(QString, QString, QString);
     void doubleClicked(QString);
