@@ -1268,6 +1268,17 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
     {
         QVector<_KGKIIS_GMPEAK_EVENT_STA_t> tempInfos;
 
+        if(eewInfos.isEmpty())
+        {
+            QDateTime ttimeUTC;
+            QDateTime ttimeKST;
+            ttimeUTC.setTimeSpec(Qt::UTC);
+            ttimeUTC.setTime_t(pgaDetectInfos.first().time);
+
+            ttimeKST = convertKST(ttimeUTC);
+            ui->timeLB->setText(ttimeKST.toString("yyyy-MM-dd hh:mm:ss ") +"KST");
+        }
+
         for(int i=0;i<pgaDetectInfos.count();i++)
         {
             _KGKIIS_GMPEAK_EVENT_STA_t info = pgaDetectInfos.at(i);
