@@ -90,6 +90,7 @@ private:
     void decorationGUI();
 
     QTextCodec *codec;
+    bool canAccessInternet;
 
     // About Tray mode
     QSystemTrayIcon *trayIcon;

@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>Viewmap.qml</file>
+        <file>ViewmapForOffline.qml</file>
         <file>Selectsta.qml</file>
         <file>KissStaMarker.qml</file>
         <file>LocalStaMarker.qml</file>

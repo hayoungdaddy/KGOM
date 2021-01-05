@@ -15,6 +15,18 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     qRegisterMetaType<_KGOnSite_SOH_t>("_KGOnSite_SOH_t");
     qRegisterMetaType< QMultiMap<int,_QSCD_FOR_MULTIMAP> >("QMultiMap<int,_QSCD_FOR_MULTIMAP>");
 
+    // check for accessing internet
+    QProcess process;
+    QString cmd = "ping -W 1 8.8.8.8 -c 1";
+    process.start(cmd);
+    process.waitForFinished(-1); // will wait forever until finished
+    QString stdout = process.readAllStandardOutput();
+
+    if(stdout.indexOf("ttl") == -1) // return -1 means that this system can't access internet
+        canAccessInternet = false;
+    else
+        canAccessInternet = true;
+
     // Setup threads for receiving data
     krecveew = new RecvEEWMessage(this);
     krecvOnsite = new RecvOnsiteMessage(this);
@@ -114,7 +126,10 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     eMapContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     eMapContainer->setFocusPolicy(Qt::TabFocus);
     eMapContainer->setStyleSheet("background-color: black;");
-    eventsView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    if(canAccessInternet)
+        eventsView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    else
+        eventsView->setSource(QUrl(QStringLiteral("qrc:/ViewmapForOffline.qml")));
     ui->eventsMapLO->addWidget(eMapContainer);
     eRootObj = eventsView->rootObject();
     QMetaObject::invokeMethod(this->eRootObj, "clearMap", Q_RETURN_ARG(QVariant, eReturnedValue));
@@ -129,7 +144,10 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     aMapContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     aMapContainer->setFocusPolicy(Qt::TabFocus);
     aMapContainer->setStyleSheet("background-color: black;");
-    alertView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    if(canAccessInternet)
+        alertView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    else
+        alertView->setSource(QUrl(QStringLiteral("qrc:/ViewmapForOffline.qml")));
     ui->alertMapLO->addWidget(aMapContainer);
     aRootObj = alertView->rootObject();
     QMetaObject::invokeMethod(this->aRootObj, "clearMap", Q_RETURN_ARG(QVariant, aReturnedValue));
@@ -143,7 +161,10 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     rMapContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     rMapContainer->setFocusPolicy(Qt::TabFocus);
     rMapContainer->setStyleSheet("background-color: black;");
-    realTimeView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    if(canAccessInternet)
+        realTimeView->setSource(QUrl(QStringLiteral("qrc:/Viewmap.qml")));
+    else
+        realTimeView->setSource(QUrl(QStringLiteral("qrc:/ViewmapForOffline.qml")));
     ui->pgaMapLO->addWidget(rMapContainer);
     rRootObj = realTimeView->rootObject();
     QMetaObject::invokeMethod(this->rRootObj, "clearMap", Q_RETURN_ARG(QVariant, rReturnedValue));
