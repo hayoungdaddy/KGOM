@@ -456,6 +456,8 @@ void MainWindow::doRepeatWork()
         log->write(configure.KGOM_HOME + "/logs/", "---- Terminated this event ----");
 
         ui->mainTW->setTabEnabled(0, true);
+        ui->replayPB->show();
+        ui->viewDetailPB->show();
         ui->mainTW->setCurrentIndex(1);
 
         if(aniTimer->isActive())
@@ -1985,6 +1987,8 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
 
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
+        ui->replayPB->hide();
+        ui->viewDetailPB->hide();
     }
     else
     {
@@ -2060,6 +2064,8 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
 
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false);
+        ui->replayPB->hide();
+        ui->viewDetailPB->hide();
         pgaAlerting();
         blinkColor.setNamedColor(getMagColor(990).name());
     }
@@ -2151,6 +2157,8 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
 
         ui->mainTW->setCurrentIndex(1);
         ui->mainTW->setTabEnabled(0, false); 
+        ui->replayPB->hide();
+        ui->viewDetailPB->hide();
     }
     else
     {

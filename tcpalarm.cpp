@@ -29,7 +29,7 @@ bool TcpAlarm::conn(string address, int port)
             perror("Could not create socket");
         }
 
-        qDebug()<<"Socket created\n";
+        qDebug() << "[Connect to Alarm Device] Socket created\n";
     }
     else    {   /* OK , nothing */  }
 
@@ -47,7 +47,7 @@ bool TcpAlarm::conn(string address, int port)
         {
             //gethostbyname failed
             herror("gethostbyname");
-            qDebug()<<"Failed to resolve hostname\n";
+            qDebug() << "[Connect to Alarm Device] Failed to resolve hostname\n";
 
             return false;
         }
@@ -82,7 +82,7 @@ bool TcpAlarm::conn(string address, int port)
         return 1;
     }
 
-    qDebug()<<"Connected\n";
+    qDebug() << "[Connect to Alarm Device] Connected\n";
     return true;
 }
 
@@ -97,7 +97,7 @@ bool TcpAlarm::send_data(char *data, int len)
         perror("Send failed : ");
         return false;
     }
-    qDebug()<<"Data send\n";
+    qDebug() << "[Connect to Alarm Device] Data send\n";
 
     return true;
 }
@@ -144,35 +144,35 @@ void ControlAlarm::setup(QString ip, int port)
 
     if ( RecvAck[0] != 'A' )
     {
-        qDebug() << " Couldn't receive any data, exit " << endl ;
+        qDebug() << "[Connect to Alarm Device] Couldn't receive any data, exit " << endl ;
     }
     else
     {
-        qDebug() << " ########################## Received data";
+        qDebug() << "[Connect to Alarm Device] ########################## Received data";
     }
 }
 
 void ControlAlarm::blinkRED()
 {
     WCommand[RLAMP] = LAMP_BLINK ;
-    //WCommand[SOUND] = STYPE_B___ ;
-    WCommand[SOUND] = STYPE_BB;
+    WCommand[SOUND] = STYPE_B___ ;
+    //WCommand[SOUND] = STYPE_BB;
     alarm.send_data( WCommand, 10 ) ;
 }
 
 void ControlAlarm::blinkYELLOW()
 {
     WCommand[YLAMP] = LAMP_BLINK ;
-    //WCommand[SOUND] = STYPE_B___ ;
-    WCommand[SOUND] = STYPE_BB;
+    WCommand[SOUND] = STYPE_B___ ;
+    //WCommand[SOUND] = STYPE_BB;
     alarm.send_data( WCommand, 10 ) ;
 }
 
 void ControlAlarm::blinkBLUE()
 {
     WCommand[BLAMP] = LAMP_BLINK ;
-    //WCommand[SOUND] = STYPE_B___ ;
-    WCommand[SOUND] = STYPE_BpBp;
+    WCommand[SOUND] = STYPE_B___ ;
+    //WCommand[SOUND] = STYPE_BpBp;
     alarm.send_data( WCommand, 10 ) ;
 }
 
