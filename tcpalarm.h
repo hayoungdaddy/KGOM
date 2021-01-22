@@ -17,7 +17,7 @@ using namespace std;
 
 #define RLAMP 2
 #define YLAMP 3
-#define BLAMP 4
+#define GLAMP 4
 #define SOUND 7
 
 #define LAMP_ON    0x02
@@ -29,7 +29,6 @@ using namespace std;
 #define STYPE_BppB    0x03
 #define STYPE_pppp    0x04
 #define STYPE_B___    0x05
-
 
 class TcpAlarm
 {
@@ -64,7 +63,7 @@ public:
     void setup(QString, int);
     void blinkRED();
     void blinkYELLOW();
-    void blinkBLUE();
+    void blinkGREEN();
     void stopBlinkAll();
 };
 

@@ -7,7 +7,6 @@ TcpAlarm::TcpAlarm()
     address = "";
 }
 
-
 TcpAlarm::~TcpAlarm()
 {
 }
@@ -29,7 +28,7 @@ bool TcpAlarm::conn(string address, int port)
             perror("Could not create socket");
         }
 
-        qDebug() << "[Connect to Alarm Device] Socket created\n";
+        //qDebug() << "[Connect to Alarm Device] Socket created\n";
     }
     else    {   /* OK , nothing */  }
 
@@ -47,7 +46,7 @@ bool TcpAlarm::conn(string address, int port)
         {
             //gethostbyname failed
             herror("gethostbyname");
-            qDebug() << "[Connect to Alarm Device] Failed to resolve hostname\n";
+            //qDebug() << "[Connect to Alarm Device] Failed to resolve hostname\n";
 
             return false;
         }
@@ -82,7 +81,7 @@ bool TcpAlarm::conn(string address, int port)
         return 1;
     }
 
-    qDebug() << "[Connect to Alarm Device] Connected\n";
+    //qDebug() << "[Connect to Alarm Device] Connected\n";
     return true;
 }
 
@@ -97,7 +96,7 @@ bool TcpAlarm::send_data(char *data, int len)
         perror("Send failed : ");
         return false;
     }
-    qDebug() << "[Connect to Alarm Device] Data send\n";
+    //qDebug() << "[Connect to Alarm Device] Data send\n";
 
     return true;
 }
@@ -119,6 +118,7 @@ int TcpAlarm::receive(char *a, int len=15)
     memcpy( a, buffer, 10) ;
     return reply ;
 }
+
 
 ControlAlarm::ControlAlarm()
 {
@@ -163,15 +163,15 @@ void ControlAlarm::blinkRED()
 void ControlAlarm::blinkYELLOW()
 {
     WCommand[YLAMP] = LAMP_BLINK ;
-    WCommand[SOUND] = STYPE_B___ ;
+    WCommand[SOUND] = STYPE_pppp ;
     //WCommand[SOUND] = STYPE_BB;
     alarm.send_data( WCommand, 10 ) ;
 }
 
-void ControlAlarm::blinkBLUE()
+void ControlAlarm::blinkGREEN()
 {
-    WCommand[BLAMP] = LAMP_BLINK ;
-    WCommand[SOUND] = STYPE_B___ ;
+    WCommand[GLAMP] = LAMP_BLINK ;
+    //WCommand[SOUND] = STYPE_B___ ;
     //WCommand[SOUND] = STYPE_BpBp;
     alarm.send_data( WCommand, 10 ) ;
 }

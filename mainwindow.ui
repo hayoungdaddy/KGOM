@@ -79,7 +79,7 @@ QWidget { /* sets background color for every widget */
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="eventsTab">
        <property name="sizePolicy">
@@ -1969,13 +1969,13 @@ QHeaderView::section {
                 <widget class="QLabel" name="label_99">
                  <property name="minimumSize">
                   <size>
-                   <width>151</width>
+                   <width>111</width>
                    <height>30</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>151</width>
+                   <width>111</width>
                    <height>30</height>
                   </size>
                  </property>
@@ -1998,13 +1998,13 @@ QHeaderView::section {
                 <widget class="QLabel" name="label_100">
                  <property name="minimumSize">
                   <size>
-                   <width>83</width>
+                   <width>82</width>
                    <height>0</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>83</width>
+                   <width>82</width>
                    <height>16777215</height>
                   </size>
                  </property>

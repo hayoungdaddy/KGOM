@@ -24,6 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    alarmdevicemonitor.cpp \
         main.cpp \
         mainwindow.cpp \
     pgaalertinfo.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
     pgadetailtable.cpp
 
 HEADERS += \
+    alarmdevicemonitor.h \
         mainwindow.h \
     common.h \
     pgaalertinfo.h \
@@ -71,6 +73,7 @@ HEADERS += \
     pgadetailtable.h
 
 FORMS += \
+    alarmdevicemonitor.ui \
         mainwindow.ui \
     eventlist.ui \
     configurationwizard.ui \

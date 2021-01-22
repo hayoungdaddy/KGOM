@@ -205,6 +205,11 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
         sohKissMon[i] = new SohMonitor;
     }
 
+    // Setup Alarm Device Monitor widget
+    alarmMonWA = new QWidgetAction(this);
+    alarmMonPB = new QPushButton;
+    alarmMon = new AlarmDeviceMonitor;
+
     // Setup a ToolBar
     QLabel *sysTimeLB = new QLabel;
     //sysTimeLB->setText("System Time (KST) : ");
@@ -231,10 +236,6 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
     connect(ui->viewDetailPB, SIGNAL(clicked(bool)), this, SLOT(showViewDetail()));
 
     setup();
-
-    controlAlarm = new ControlAlarm();
-    if(configure.alarm_device_ip != "")
-        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
 
     connect(ui->replayPB, SIGNAL(clicked(bool)), this, SLOT(eventReplayPBClicked()));
 }
@@ -449,9 +450,10 @@ void MainWindow::doRepeatWork()
         log->write(configure.KGOM_HOME + "/logs/", "I'm alive.");
 
     // End a event
-    if(eventMode == 1 && eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t())
+    if(eventState >= 1 && eventStartTimeUTC.toTime_t() + EVENT_DURATION < timeUTC.toTime_t())
     {
-        eventMode = 0;
+        stopBlinkPBClicked();
+        eventState = 0;
         maxMag = 0;
         log->write(configure.KGOM_HOME + "/logs/", "---- Terminated this event ----");
 
@@ -633,8 +635,8 @@ void MainWindow::stopBlinkPBClicked()
     blinkTimer->stop();
     if(configure.alarm_device_ip != "")
     {
-        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
-        controlAlarm->stopBlinkAll();
+        alarmMon->stopBlinkAll();
+        alarmMon->stopBlinkAll();
     }
     ui->mainToolBar->actions().at(3)->setVisible(false);
     ui->mainTW->setStyleSheet(style);
@@ -811,31 +813,37 @@ void MainWindow::readConfigure(QString configFile)
                 configure.alarm_device_ip = _line.section("=", 1, 1).section(":", 0, 0);
                 configure.alarm_device_port = _line.section("=", 1, 1).section(":", 1, 1).toInt();
             }
-            else if(_line.startsWith("MAG_LEVEL1") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("USE_MAG_ALERT"))
             {
-                configure.mag_level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.mag_level1_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
-                configure.mag_level1_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
-                configure.mag_level1_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
+                configure.mag_alert_use = _line.section("=", 1, 1).toInt();
             }
-            else if(_line.startsWith("MAG_LEVEL2") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("MAG_LEVEL1") && _line.section("=", 1, 1) != "" && _line.section("=", 1, 1) != "::")
             {
-                configure.mag_level2_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.mag_level2_alert_min_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
-                configure.mag_level2_alert_max_mag = _line.section("=", 1, 1).section(":", 2, 2).toFloat();
-                configure.mag_level2_alert_dist = _line.section("=", 1, 1).section(":", 3, 3).toInt();
+                configure.mag_level1_alert_min_mag = _line.section("=", 1, 1).section(":", 0, 0).toFloat();
+                configure.mag_level1_alert_max_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.mag_level1_alert_dist = _line.section("=", 1, 1).section(":", 2, 2).toInt();
             }
-            else if(_line.startsWith("PGA_LEVEL1") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("MAG_LEVEL2") && _line.section("=", 1, 1) != "" && _line.section("=", 1, 1) != "::")
             {
-                configure.pga_level1_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.pga_level1_threshold = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.mag_level2_alert_min_mag = _line.section("=", 1, 1).section(":", 0, 0).toFloat();
+                configure.mag_level2_alert_max_mag = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.mag_level2_alert_dist = _line.section("=", 1, 1).section(":", 2, 2).toInt();
             }
-            else if(_line.startsWith("PGA_LEVEL2") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("USE_INTEN_ALERT"))
             {
-                configure.pga_level2_alert_use = _line.section("=", 1, 1).section(":", 0, 0).toInt();
-                configure.pga_level2_threshold = _line.section("=", 1, 1).section(":", 1, 1).toFloat();
+                configure.inten_alert_use = _line.section("=", 1, 1).toInt();
             }
-            else if(_line.startsWith("NUM_STA_PGA") && _line.section("=",1,1) != "")
+            else if(_line.startsWith("INTEN_LEVEL1") && _line.section("=", 1, 1) != "" && _line.section("=", 1, 1) != "::")
+            {
+                configure.inten_level1_threshold = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.pga_level1_threshold = pgaValue[configure.inten_level1_threshold - 1];
+            }
+            else if(_line.startsWith("INTEN_LEVEL2") && _line.section("=", 1, 1) != "" && _line.section("=", 1, 1) != "::")
+            {
+                configure.inten_level2_threshold = _line.section("=", 1, 1).section(":", 0, 0).toInt();
+                configure.pga_level2_threshold = pgaValue[configure.inten_level2_threshold - 1];
+            }
+            else if(_line.startsWith("NUM_STA_FOR_PGA") && _line.section("=",1,1) != "")
             {
                 configure.pga_num_sta_threshold = _line.section("=", 1, 1).section(":", 0, 0).toInt();
             }
@@ -886,6 +894,8 @@ void MainWindow::createActionsOnToolbar()
     for(int i=0;i<MAX_KISSSTA_NUM;i++)
         ui->mainToolBar->removeAction(sohKissWA[i]);
 
+    ui->mainToolBar->removeAction(alarmMonWA);
+
     QString style = "background-color: " + sohColor[2].name();
 
     for(int i=0;i<configure.localStaVT.count();i++)
@@ -919,6 +929,38 @@ void MainWindow::createActionsOnToolbar()
         connect(sohKissMon[i], SIGNAL(sendSOHtoMainWindow(int, QString, QString)),
                                        this, SLOT(recvSOHfromWG(int, QString, QString)));
     }
+
+    if(configure.alarm_device_ip != "")
+    {
+        alarmMonPB->setText(codec->toUnicode("경보기"));
+        alarmMonPB->setFixedWidth(60); alarmMonPB->setFixedHeight(25);
+        alarmMonPB->setStyleSheet(style);
+        alarmMonWA->setDefaultWidget(alarmMonPB);
+        ui->mainToolBar->addAction(alarmMonWA);
+        alarmMonPB->setObjectName("ALARM_DEVICE");
+        alarmMon->setup(configure.alarm_device_ip, configure.alarm_device_port);
+        alarmMon->hide();
+        connect(alarmMonPB, SIGNAL(clicked(bool)), this, SLOT(alarmMonClicked()));
+        connect(alarmMon, SIGNAL(sendAlarmDeviceSOHtoMainWindow(int)), this, SLOT(recvAlarmDeviceSOHfromWG(int)));
+    }
+}
+
+void MainWindow::alarmMonClicked()
+{
+    alarmMon->show();
+}
+
+void MainWindow::recvAlarmDeviceSOHfromWG(int status)
+{
+    //qDebug() << status;
+    if(status == 0)
+    {
+        alarmMonPB->setStyleSheet("background-color: rgb(255, 51, 51);");
+        //alarmMon->setup(configure.alarm_device_ip, configure.alarm_device_port);
+        log->write(configure.KGOM_HOME + "/logs/", "Try to connect a alarm device.");
+    }
+    else if(status == 1)
+        alarmMonPB->setStyleSheet("background-color: rgb(115, 210, 22);");
 }
 
 void MainWindow::showAnimation()
@@ -961,58 +1003,34 @@ int MainWindow::getLastEvid()
     return this->eventModel->record(0).value("max(evid)").toInt();
 }
 
-void MainWindow::pgaAlerting()
+void MainWindow::alerting(int nowEventState)
 {
-    _KGKIIS_GMPEAK_EVENT_STA_t sta;
-    pgaDetection.condition = 0;
+    blinkColor.setNamedColor(alarmColor[nowEventState-1].name());
+    if(!blinkTimer->isActive()) blinkTimer->start(1000);
+    ui->mainToolBar->actions().at(3)->setVisible(true); // event confirm button
 
-    for(int i=0;i<pgaDetection.staPGAList.size();i++)
+    if(nowEventState == 1)
     {
-        sta = pgaDetection.staPGAList.at(i);
-        if(sta.maxH >= pgaDetection.threshold1 && pgaDetection.condition == 0)
-            pgaDetection.condition = 1;
-        else if(sta.maxH >= pgaDetection.threshold2)
-            pgaDetection.condition = 2;
-    }
-
-    if(pgaDetection.condition == 1 && configure.pga_level1_alert_use == 1 && configure.alarm_device_ip != "")
-    {
-        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
-        controlAlarm->blinkYELLOW();
-        log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked from PGA");
-    }
-    else if(pgaDetection.condition == 2 && configure.pga_level2_alert_use == 1 && configure.alarm_device_ip != "")
-    {
-        controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
-        controlAlarm->blinkRED();
-        log->write(configure.KGOM_HOME + "/logs/", "red Alarm Worked from PGA");
-    }
-}
-
-void MainWindow::magAlerting(double mag, double dist)
-{
-    if(configure.mag_level1_alert_use == 1)
-    {
-        if(mag >= configure.mag_level1_alert_min_mag && mag < configure.mag_level1_alert_max_mag && dist <= configure.mag_level1_alert_dist)
+        if(configure.alarm_device_ip != "")
         {
-            if(configure.alarm_device_ip != "")
-            {
-                controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
-                controlAlarm->blinkYELLOW();
-                log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked from Magnitude");
-            }
+            alarmMon->blinkGREEN();
+            log->write(configure.KGOM_HOME + "/logs/", "Green Alarm Worked.");
         }
     }
-    if(configure.mag_level2_alert_use == 1)
+    else if(nowEventState == 2)
     {
-        if(mag >= configure.mag_level2_alert_min_mag && mag < configure.mag_level2_alert_max_mag && dist <= configure.mag_level2_alert_dist)
+        if(configure.alarm_device_ip != "")
         {
-            if(configure.alarm_device_ip != "")
-            {
-                controlAlarm->setup(configure.alarm_device_ip, configure.alarm_device_port);
-                controlAlarm->blinkRED();
-                log->write(configure.KGOM_HOME + "/logs/", "Red Alarm Worked from Magnitude");
-            }
+            alarmMon->blinkYELLOW();
+            log->write(configure.KGOM_HOME + "/logs/", "Yellow Alarm Worked.");
+        }
+    }
+    else if(nowEventState == 3)
+    {
+        if(configure.alarm_device_ip != "")
+        {
+            alarmMon->blinkRED();
+            log->write(configure.KGOM_HOME + "/logs/", "Red Alarm Worked.");
         }
     }
 }
@@ -1215,7 +1233,10 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
         if(eewInfos.first().longitude > maxLon) maxLon = eewInfos.first().longitude;
 
         drawEEWOnMap(eewInfos.first());
-        ui->replayPB->show();
+        if(eventState == 0)
+            ui->replayPB->show();
+        else
+            ui->replayPB->hide();
     }
     else
         ui->replayPB->hide();
@@ -1533,7 +1554,7 @@ void MainWindow::drawOnsiteOnMap(int net, _KGOnSite_Info_t info)
 
 void MainWindow::setup()
 {
-    eventMode = 0;
+    eventState = 0;
     maxMag = 0;
     readConfigure(configure.configFileName);
     createActionsOnToolbar();
@@ -1895,11 +1916,69 @@ void MainWindow::setEventsTab(double sMag, double eMag, int dateIndex, int nEven
 
 }
 
+int MainWindow::getEventStateUsingMag(double mag, double dist, int nowState)
+{
+    int newState = 1;
+
+    if(configure.mag_alert_use == 1)
+    {
+        if(mag >= configure.mag_level1_alert_min_mag &&
+           mag < configure.mag_level1_alert_max_mag &&
+           dist <= configure.mag_level1_alert_dist)
+        {
+            if(nowState <= 1)
+                newState = 2;
+            else
+                newState = nowState;
+        }
+
+        if(mag >= configure.mag_level2_alert_min_mag &&
+           mag < configure.mag_level2_alert_max_mag &&
+           dist <= configure.mag_level2_alert_dist)
+        {
+            if(nowState <= 2)
+                newState = 3;
+            else
+                newState = nowState;
+        }
+    }
+
+    log->write(configure.KGOM_HOME + "/logs/", "Event State : " + QString::number(newState) + "  (0:No Event, 1: Green, 2: Yellow, 3: Red)");
+    return newState;
+}
+
+int MainWindow::getEventStateUsingInten(int inten, int nowState)
+{
+    int newState = 1;
+
+    if(configure.inten_alert_use == 1)
+    {
+        if(inten >= configure.inten_level1_threshold)
+        {
+            if(nowState <= 1)
+                newState = 2;
+            else
+                newState = nowState;
+        }
+
+        if(inten >= configure.inten_level2_threshold)
+        {
+            if(nowState <= 2)
+                newState = 3;
+            else
+                newState = nowState;
+        }
+    }
+
+    log->write(configure.KGOM_HOME + "/logs/", "Event State : " + QString::number(newState) + "  (0:No Event, 1: Green, 2: Yellow, 3: Red)");
+    return newState;
+}
+
 void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
 { 
     int evid;
     QString query;
-    if(eventMode == 0)
+    if(eventState == 0)
         evid = getLastEvid() + 1;
     else
         evid = getLastEvid();
@@ -1960,22 +2039,37 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
 
     double dist = getDistance(info.lat, info.lon, configure.myposition_lat, configure.myposition_lon);
 
-    if(eventMode == 0)
+    if(eventState == 0)
     {
         query = "INSERT INTO event(evid, lddate) values (" +
                 QString::number(evid) + ", '" +
                 QDate::currentDate().toString("yyyyMMdd") + "')";
         this->eventModel->setQuery(query);
 
-        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeUTC.setTime_t(info.ttime);
         eventStartTimeKST = convertKST(eventStartTimeUTC);
 
-        blinkTimer->start(1000);
-        eventMode = 1;
+        eventState = 1;
+        int newEventState1 = 0;
+        int newEventState2 = 0;
+
+        if(configure.inten_alert_use == 1)
+        {
+            newEventState1 = getEventStateUsingInten((int)info.intensity, eventState);
+        }
+
+        if(configure.mag_alert_use == 1)
+        {
+            newEventState2 = getEventStateUsingMag(info.magnitude, dist, eventState);
+        }
+
+        if(newEventState1 > newEventState2) eventState = newEventState1;
+        else if(newEventState2 > newEventState1) eventState = newEventState2;
+        else if(newEventState1 == newEventState2 && newEventState1 != 0) eventState = newEventState1;
+
+        alerting(eventState);
+
         maxMag = info.magnitude;
-        magAlerting(info.magnitude, dist);
-        blinkColor.setNamedColor(getMagColor(info.magnitude).name());
-        ui->mainToolBar->actions().at(3)->setVisible(true);
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
         log->write(configure.KGOM_HOME + "/logs/", "Event ID: " + QString::number(evid));
@@ -1995,9 +2089,26 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
         if(maxMag <= info.magnitude)
         {
             maxMag = info.magnitude;
-            //alerting(info.magnitude, dist);
-            blinkColor.setNamedColor(getMagColor(info.magnitude).name());
         }
+
+        int newEventState1 = 0;
+        int newEventState2 = 0;
+
+        if(configure.inten_alert_use == 1)
+        {
+            newEventState1 = getEventStateUsingInten((int)info.intensity, eventState);
+        }
+
+        if(configure.mag_alert_use == 1)
+        {
+            newEventState2 = getEventStateUsingMag(info.magnitude, dist, eventState);
+        }
+
+        if(newEventState1 > newEventState2) eventState = newEventState1;
+        else if(newEventState2 > newEventState1) eventState = newEventState2;
+        else if(newEventState1 == newEventState2 && newEventState1 != 0) eventState = newEventState1;
+
+        alerting(eventState);
     }
 
     getEventInfo(evid);
@@ -2007,10 +2118,13 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
 {
     int evid;
     QString query;
-    if(eventMode == 0)
+    if(eventState == 0) // new Event
         evid = getLastEvid() + 1;
     else
         evid = getLastEvid();
+
+    float avgPGA = 0;
+    int avgInten;
 
     for(int i=0;i<pd.num;i++)
     {
@@ -2024,11 +2138,17 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
                 "H" + "', -1, " +
                 QString::number(tempSta.time, 'f', 0) + ", " + "-1" + ", " +
                 "-1" + ", " + "-1" + ", " +
-                QString::number(tempSta.maxH, 'f', 4) + ", " + "-1" + ", '" +
+                QString::number(tempSta.maxH, 'f', 2) + ", " + "-1" + ", '" +
                 QDate::currentDate().toString("yyyyMMdd") + "')";
 
         this->pgaDetectModel->setQuery(query);
+
+        avgPGA = avgPGA + tempSta.maxH;
     }
+
+    avgPGA = avgPGA / pd.num;
+    avgPGA = float(myRound(double(avgPGA), 2));
+    avgInten = inten[getLegendIndex(avgPGA)];
 
     if(this->pgaDetectModel->lastError().isValid())
     {
@@ -2037,22 +2157,25 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
         return;
     }
 
-    log->write(configure.KGOM_HOME + "/logs/", "Detected a new PGA info.");
+    log->write(configure.KGOM_HOME + "/logs/", "Detected a new PGA info. Intensity(AVG.):" + QString::number(avgInten));
 
-    if(eventMode == 0)
+    if(eventState == 0)
     {
         query = "INSERT INTO event(evid, lddate) values (" +
                 QString::number(evid) + ", '" +
                 QDate::currentDate().toString("yyyyMMdd") + "')";
         this->eventModel->setQuery(query);
 
-        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeUTC.setTime_t(pd.staPGAList.first().time);
         eventStartTimeKST = convertKST(eventStartTimeUTC);
 
-        blinkTimer->start(1000);
-        eventMode = 1;
+        eventState = 1;
 
-        ui->mainToolBar->actions().at(3)->setVisible(true);
+        if(configure.inten_alert_use == 1)
+        {
+            eventState = getEventStateUsingInten(avgInten, eventState);
+            alerting(eventState);
+        }
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
         log->write(configure.KGOM_HOME + "/logs/", "Event ID: " + QString::number(evid));
@@ -2066,8 +2189,19 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
         ui->mainTW->setTabEnabled(0, false);
         ui->replayPB->hide();
         ui->viewDetailPB->hide();
-        pgaAlerting();
-        blinkColor.setNamedColor(getMagColor(990).name());
+    }
+    else
+    {
+        if(configure.inten_alert_use == 1)
+        {
+            int newEventState;
+            newEventState = getEventStateUsingInten(avgInten, eventState);
+            if(newEventState > eventState)
+            {
+                alerting(newEventState);
+                eventState = newEventState;
+            }   
+        }
     }
 
     getEventInfo(evid);
@@ -2076,36 +2210,36 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
 void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
 {
     int evid;
-    int needAnimation = 0;
+    int needStartAnimation = 0;
     QString query;
     QString rvSCNL = QString::number(eewInfo.magnitude, 'f', 1) + "/" + QString::number(eewInfo.latitude, 'f', 4) + "/" +
             QString::number(eewInfo.longitude, 'f', 4) + "/" + QString::number(eewInfo.origin_time, 'f', 0);
 
-    if(eventMode == 0)
+    if(eventState == 0) // new Event
     {
         evid = getLastEvid() + 1;
         query = "INSERT INTO event(evid, lddate) values (" +
                 QString::number(evid) + ", '" +
                 QDate::currentDate().toString("yyyyMMdd") + "')";
         this->eventModel->setQuery(query);
-        needAnimation = 1;
+        needStartAnimation = 1;
     }
-    else
+    else // Already Event
     {
         evid = getLastEvid();
 
         query = "SELECT * FROM eewInfo WHERE evid = " + QString::number(evid);
         this->eewModel->setQuery(query);
 
-        if(this->eewModel->rowCount() > 0) // eventMode = 1, update eewInfo
+        if(this->eewModel->rowCount() > 0) // eventState = 1~3, update eewInfo
         {
-            if(eewInfo.eew_evid != this->eewModel->record(0).value("evid").toInt())
+            if(eewInfo.eew_evid != this->eewModel->record(0).value("eew_evid").toInt()) // other event
                 return;
             else
-                needAnimation = 0;
+                needStartAnimation = 0;
         }
-        else
-            needAnimation = 1;
+        else // first eewInfo, but do not need insert query to event table.
+            needStartAnimation = 1;
     }
 
     query = "INSERT INTO eewInfo "
@@ -2134,10 +2268,11 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
     log->write(configure.KGOM_HOME + "/logs/", "Detected a new Network EEW info. <" + rvSCNL + ">");
 
     double dist = getDistance(eewInfo.latitude, eewInfo.longitude, configure.myposition_lat, configure.myposition_lon);
+    int expected_inten = getIntenFromMag(eewInfo.magnitude, dist);
 
-    if(eventMode == 0)
+    if(eventState == 0)
     {
-        eventStartTimeUTC = QDateTime::currentDateTimeUtc();
+        eventStartTimeUTC.setTime_t(eewInfo.origin_time);
         eventStartTimeKST = convertKST(eventStartTimeUTC);
 
         log->write(configure.KGOM_HOME + "/logs/", "---- Started a new event ----");
@@ -2145,12 +2280,28 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         log->write(configure.KGOM_HOME + "/logs/", "Start Time(KST): " + eventStartTimeKST.toString("yyyy/MM/dd hh:mm:ss"));
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
-        blinkTimer->start(1000);
-        eventMode = 1;
+        eventState = 1;
+
+        int newEventState1 = 0;
+        int newEventState2 = 0;
+
+        if(configure.inten_alert_use == 1)
+        {
+            newEventState1 = getEventStateUsingInten(expected_inten, eventState);
+        }
+
+        if(configure.mag_alert_use == 1)
+        {
+            newEventState2 = getEventStateUsingMag(eewInfo.magnitude, dist, eventState);
+        }
+
+        if(newEventState1 > newEventState2) eventState = newEventState1;
+        else if(newEventState2 > newEventState1) eventState = newEventState2;
+        else if(newEventState1 == newEventState2 && newEventState1 != 0) eventState = newEventState1;
+
+        alerting(eventState);
+
         maxMag = eewInfo.magnitude;
-        magAlerting(eewInfo.magnitude, dist);
-        blinkColor.setNamedColor(getMagColor(eewInfo.magnitude).name());
-        ui->mainToolBar->actions().at(3)->setVisible(true);
 
         if(this->isHidden())
             restoreAction->triggered();
@@ -2165,8 +2316,26 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         if(maxMag <= eewInfo.magnitude)
         {
             maxMag = eewInfo.magnitude;
-            blinkColor.setNamedColor(getMagColor(eewInfo.magnitude).name());
         }
+
+        int newEventState1 = 0;
+        int newEventState2 = 0;
+
+        if(configure.inten_alert_use == 1)
+        {
+            newEventState1 = getEventStateUsingInten(expected_inten, eventState);
+        }
+
+        if(configure.mag_alert_use == 1)
+        {
+            newEventState2 = getEventStateUsingMag(eewInfo.magnitude, dist, eventState);
+        }
+
+        if(newEventState1 > newEventState2) eventState = newEventState1;
+        else if(newEventState2 > newEventState1) eventState = newEventState2;
+        else if(newEventState1 == newEventState2 && newEventState1 != 0) eventState = newEventState1;
+
+        alerting(eventState);
     }
 
     remainSecPAbsolute = (myRound(dist / configure.p_vel, 1));
@@ -2179,21 +2348,14 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
     QDateTime now = QDateTime::currentDateTimeUtc();
     remainSecPRelative = endTimeP.toTime_t() - now.toTime_t();
     remainSecSRelative = endTimeS.toTime_t() - now.toTime_t();
-    //remainSecPRelative = remainSecPAbsolute;
-    //remainSecSRelative = remainSecSAbsolute;
-
-    //qDebug() << endTimeS.toTime_t() << now.toTime_t() << remainSecSRelative << dist << remainSecSAbsolute;
-    //1533104593 1533104598 4.29497e+09 18.076 4.5
-    // 1533116482 1533116247 235 281.019 70.3
 
     if(now.toTime_t() >= endTimeP.toTime_t())
         remainSecPRelative = -10;
     if(now.toTime_t() >= endTimeS.toTime_t())
         remainSecSRelative = -10;
 
-    if(needAnimation == 1)
+    if(needStartAnimation == 1)
     {
-        //aniCount = 0;
         aniTimer->start(100);
     }
 
@@ -2286,7 +2448,7 @@ void MainWindow::rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP> mmFromAMQ)
                     ui->pgaTW->item(j, 3)->setTextColor(Qt::white);
 
                 // keep max pga on event
-                if(eventMode == 1 && dataTimeUTC >= eventStartTimeUTC && dataTimeUTC.toTime_t() <= eventStartTimeUTC.toTime_t() + EVENT_DURATION)
+                if(eventState >= 1 && dataTimeUTC >= eventStartTimeUTC && dataTimeUTC.toTime_t() <= eventStartTimeUTC.toTime_t() + EVENT_DURATION)
                 {
                     if(configure.kissStaVT.at(j).maxPGA < hpga)
                     {
@@ -2298,66 +2460,70 @@ void MainWindow::rvPGAMultiMap(QMultiMap<int, _QSCD_FOR_MULTIMAP> mmFromAMQ)
                 }
 
                 // check over threshold
-                if(hpga >= pgaDetection.threshold1)
+                if(configure.inten_alert_use == 1 && pgaDetection.condition == 0)
                 {
-                    _KGKIIS_GMPEAK_EVENT_STA_t staPGA;
-                    strcpy(staPGA.sta, sta.toLatin1().constData());
-                    strcpy(staPGA.net, net.toLatin1().constData());
-                    strcpy(staPGA.chan, chan.toLatin1().constData());
-                    strcpy(staPGA.loc, loc.toLatin1().constData());
-                    staPGA.lat = configure.kissStaVT.at(j).lat;
-                    staPGA.lon = configure.kissStaVT.at(j).lon;
-
-                    staPGA.time = dataTimeUTC.toTime_t();
-                    staPGA.maxH = hpga;
-
-                    if(pgaDetection.num == 0)
+                    if(hpga >= pgaDetection.threshold1)
                     {
-                        pgaDetection.num++;
-                        pgaDetection.staPGAList.append(staPGA);
-                    }
-                    else
-                    {
-                        bool needInsertTime = false;
-                        bool needInsertStaName = true;
+                        _KGKIIS_GMPEAK_EVENT_STA_t staPGA;
+                        strcpy(staPGA.sta, sta.toLatin1().constData());
+                        strcpy(staPGA.net, net.toLatin1().constData());
+                        strcpy(staPGA.chan, chan.toLatin1().constData());
+                        strcpy(staPGA.loc, loc.toLatin1().constData());
+                        staPGA.lat = configure.kissStaVT.at(j).lat;
+                        staPGA.lon = configure.kissStaVT.at(j).lon;
 
-                        _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.first();
-                        if(qAbs(tempStaPGA.time - staPGA.time) <= pgaDetection.timeWindow)
+                        staPGA.time = dataTimeUTC.toTime_t();
+                        staPGA.maxH = hpga;
+
+                        if(pgaDetection.num == 0)
                         {
-                            needInsertTime = true;
+                            pgaDetection.num++;
+                            pgaDetection.staPGAList.append(staPGA);
                         }
-
-                        for(int k=0;k<pgaDetection.staPGAList.size();k++)
+                        else
                         {
-                            _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.at(k);
+                            bool needInsertTime = false;
+                            bool needInsertStaName = true;
 
-                            if(QString(tempStaPGA.sta).startsWith(QString(staPGA.sta)) &&
-                                    QString(tempStaPGA.net).startsWith(QString(staPGA.net)))
+                            _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.first();
+                            if(qAbs(tempStaPGA.time - staPGA.time) <= pgaDetection.timeWindow)
                             {
-                                needInsertStaName = false;
-                                break;
+                                needInsertTime = true;
+                            }
+
+                            for(int k=0;k<pgaDetection.staPGAList.size();k++)
+                            {
+                                _KGKIIS_GMPEAK_EVENT_STA_t tempStaPGA = pgaDetection.staPGAList.at(k);
+
+                                if(QString(tempStaPGA.sta).startsWith(QString(staPGA.sta)) &&
+                                        QString(tempStaPGA.net).startsWith(QString(staPGA.net)))
+                                {
+                                    needInsertStaName = false;
+                                    break;
+                                }
+                            }
+
+                            if(!needInsertTime)
+                            {
+                                pgaDetection.num = 0;
+                                pgaDetection.staPGAList.clear();
+                                pgaDetection.num++;
+                                pgaDetection.staPGAList.append(staPGA);
+                            }
+                            else if(needInsertTime && needInsertStaName)
+                            {
+                                pgaDetection.num++;
+                                pgaDetection.staPGAList.append(staPGA);
                             }
                         }
-
-                        if(!needInsertTime)
-                        {
-                            pgaDetection.num = 0;
-                            pgaDetection.staPGAList.clear();
-                            pgaDetection.num++;
-                            pgaDetection.staPGAList.append(staPGA);
-                        }
-                        else if(needInsertTime && needInsertStaName)
-                        {
-                            pgaDetection.num++;
-                            pgaDetection.staPGAList.append(staPGA);
-                        }
                     }
-                }
 
-                // check pga detection for a event
-                if(pgaDetection.num >= pgaDetection.num_threshold && eventMode == 0)
-                {
-                    rvPGAInfos(pgaDetection);
+                    // check pga detection for a event
+                    if(pgaDetection.num >= pgaDetection.num_threshold)
+                    {
+                        pgaDetection.condition = 1;
+                        rvPGAInfos(pgaDetection);
+                    }
                 }
             }
         }

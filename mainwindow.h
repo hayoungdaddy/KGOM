@@ -18,6 +18,7 @@
 #include "aboutthis.h"
 #include "configuration.h"
 #include "tcpalarm.h"
+#include "alarmdevicemonitor.h"
 
 #include <QMainWindow>
 #include <QQuickView>
@@ -129,6 +130,10 @@ private:
     QPushButton *sohLocalPB[MAX_LOCALSTA_NUM];
     QPushButton *sohKissPB[MAX_KISSSTA_NUM];
 
+    QWidgetAction *alarmMonWA;
+    AlarmDeviceMonitor *alarmMon;
+    QPushButton *alarmMonPB;
+
     // About Database & table
     QSqlDatabase db;
     QSqlQueryModel *eventModel;
@@ -139,15 +144,16 @@ private:
     void setEventsTab(double, double, int, int, int, QDate, QDate);
 
     // About event
-    int eventMode;
+    int eventState; // 0: No Event,  1: Green Alarm,  2: Yellow Alarm,  3: Red Alarm
     double maxMag;
     QDateTime eventStartTimeUTC;
     QDateTime eventStartTimeKST;
     QTimer *blinkTimer;
-    ControlAlarm *controlAlarm;
+    //ControlAlarm *controlAlarm;
     int getLastEvid();
-    void magAlerting(double, double);
-    void pgaAlerting();
+    int getEventStateUsingMag(double, double, int);
+    int getEventStateUsingInten(int, int);
+    void alerting(int);
     _PGA_DETECTION pgaDetection;
 
     // About animations
@@ -198,6 +204,8 @@ private slots:
     void setDiffTime();
 
     void sohPBClicked();
+    void alarmMonClicked();
+    void recvAlarmDeviceSOHfromWG(int);
 
     void blinkingWindow();
     void stopBlinkPBClicked();

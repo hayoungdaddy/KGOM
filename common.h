@@ -268,29 +268,30 @@ typedef struct _configure
     QString alarm_device_ip;
     int alarm_device_port;
 
-    int mag_level1_alert_use;
+    int mag_alert_use;
+
     float mag_level1_alert_min_mag;
     float mag_level1_alert_max_mag;
     int mag_level1_alert_dist;
 
-    int mag_level2_alert_use;
     float mag_level2_alert_min_mag;
     float mag_level2_alert_max_mag;
     int mag_level2_alert_dist;
 
-    int pga_level1_alert_use;
+    int inten_alert_use;
+
+    int inten_level1_threshold;
     float pga_level1_threshold;
 
-    int pga_level2_alert_use;
+    int inten_level2_threshold;
     float pga_level2_threshold;
+
     int pga_num_sta_threshold;
     int pga_time_window;
 
     double p_vel;
     double s_vel;
 } _CONFIGURE;
-
-
 
 typedef struct _qscd_struct
 {
@@ -487,14 +488,15 @@ static double getDistance(double lat1, double lon1, double lat2, double lon2)
     return dist;
 }
 
+
 static     int     inten[NUM_LEGEND] = {    1,    2,      3,     4,     5,      6,      7,      8,      9,     10 };
 static QString intenText[NUM_LEGEND] = {  "I",  "II", "III",  "IV",   "V",   "VI",  "VII", "VIII",   "IX",    "X" };
-static  double  pgaValue[NUM_LEGEND] = { 0.97, 2.94,   4.90, 23.52, 65.66, 127.40, 235.20, 431.20, 813.40, 999999 };
-static     int  pgaWidth[NUM_LEGEND] = {   12,   13,     14,    16,    18,     20,     20,     20,     20,     20 };
+static   float  pgaValue[NUM_LEGEND] = { 0.97,  2.94,  4.90, 23.52, 65.66, 127.40, 235.20, 431.20, 813.40, 999999 };
+static     int  pgaWidth[NUM_LEGEND] = {   12,    13,    14,    16,    18,     20,     20,     20,     20,     20 };
 static  QColor  pgaColor[NUM_LEGEND] = { QColor(215, 236, 255), QColor(165, 221, 249), QColor(146, 208,  80), QColor(255, 255,   0), QColor(255, 192,   0),
                                        QColor(255,   0,   0), QColor(163,  39, 119), QColor( 99,  37,  35), QColor( 76,  38,   0), QColor(  0,   0,   0) };
 
-static int getLegendIndex(double value)
+static int getLegendIndex(float value)
 {
     int legendIndex;
 
@@ -516,6 +518,120 @@ static int getLegendIndex(double value)
 
     return legendIndex;
 }
+
+static QString getStringFromInten(double inten)
+{
+    QString str;
+    QTextCodec *codec = QTextCodec::codecForName("utf-8");
+    if(inten < 4) str = codec->toUnicode("약함");
+    else if(inten >= 4 && inten < 6) str = codec->toUnicode("강함");
+    else if(inten >= 6) str = codec->toUnicode("격함");
+
+    return str;
+}
+
+static int getIntenFromMag(double mag, double dist)
+{
+    double _myGal = 0;
+    int intensity;
+
+    if(dist <= 100)
+    {
+        if(dist < 10) dist = 10;
+
+        _myGal = exp(
+                    (0.1250737E+02 + 0.4874629E+00 * (mag - 6) + -0.2940726E-01 * pow((mag - 6), 2) + 0.1737204E-01 * pow((mag - 6), 3))
+                            +(-0.1928185E-02 + 0.2251016E-03 * (mag - 6) + -0.6378615E-04 * pow((mag - 6), 2) + 0.6967121E-04 * pow((mag - 6), 3)) * dist
+                            +(-0.5795112E+00 + 0.1138817E+00 * (mag - 6) + -0.1162326E-01 * pow((mag - 6), 2) + -0.3646674E-02 * pow((mag - 6), 3)) * log(dist)
+                            +(-log(dist) - 0.5 * log(100))
+            );
+    }
+    else
+    {
+        _myGal = exp(
+                    (0.1250737E+02 + 0.4874629E+00 * (mag - 6) + -0.2940726E-01 * pow((mag - 6), 2) + 0.1737204E-01 * pow((mag - 6), 3))
+                            +(-0.1928185E-02 + 0.2251016E-03 * (mag - 6) + -0.6378615E-04 * pow((mag - 6), 2) + 0.6967121E-04 * pow((mag - 6), 3)) * dist
+                            +(-0.5795112E+00 + 0.1138817E+00 * (mag - 6) + -0.1162326E-01 * pow((mag - 6), 2) + -0.3646674E-02 * pow((mag - 6), 3)) * log(dist)
+                            +(-log(100) - 0.5 * log(dist))
+            );
+    }
+
+    // mpss legend
+    /*
+    if(_myGal <= 0.98) intensity = 1;
+    else if(_myGal > 0.98 && _myGal <= 2.94) intensity = 2;
+    else if(_myGal > 2.94 && _myGal <= 7.84) intensity = 3;
+    else if(_myGal > 7.84 && _myGal <= 23.52) intensity = 4;
+    else if(_myGal > 23.52 && _myGal <= 65.66) intensity = 5;
+    else if(_myGal > 65.66 && _myGal <= 127.40) intensity = 6;
+    else if(_myGal > 127.40 && _myGal <= 235.20) intensity = 7;
+    else if(_myGal > 235.20 && _myGal <= 431.20) intensity = 8;
+    else if(_myGal > 431.20 && _myGal <= 813.40) intensity = 9;
+    else if(_myGal > 813.40) intensity = 10;
+    */
+
+    // KMA legend
+    if(_myGal <= pgaValue[0]) intensity = 1;
+    else if(_myGal > pgaValue[0] && _myGal <= pgaValue[1]) intensity = 2;
+    else if(_myGal > pgaValue[1] && _myGal <= pgaValue[2]) intensity = 3;
+    else if(_myGal > pgaValue[2] && _myGal <= pgaValue[3]) intensity = 4;
+    else if(_myGal > pgaValue[3] && _myGal <= pgaValue[4]) intensity = 5;
+    else if(_myGal > pgaValue[4] && _myGal <= pgaValue[5]) intensity = 6;
+    else if(_myGal > pgaValue[5] && _myGal <= pgaValue[6]) intensity = 7;
+    else if(_myGal > pgaValue[6] && _myGal <= pgaValue[7]) intensity = 8;
+    else if(_myGal > pgaValue[7] && _myGal <= pgaValue[8]) intensity = 9;
+    else if(_myGal > pgaValue[8]) intensity = 10;
+
+    return intensity;
+}
+
+static QColor alarmColor[3] = {QColor(29, 219, 22), QColor(255, 153, 0), QColor(255, 51, 51)};
+
+
+#define NUM_MAGLIST 4
+static double magValue[NUM_MAGLIST] = {0, 3, 4.5, 6};
+static QColor magColor[NUM_MAGLIST] = {QColor(29, 219, 22), QColor(255, 153, 0), QColor(255, 51, 51), QColor("#AA0000")};
+
+static QString getMagText(double magd)
+{
+    int i;
+    for(i=0;i<NUM_MAGLIST;i++)
+    {
+        if(magd < magValue[i])
+            break;
+        else
+            continue;
+    }
+
+    if(i == 1)
+            return "M<" + QString::number(magValue[i], 'f', 1);
+    else if(i > NUM_MAGLIST -1)
+        return "M≥" + QString::number(magValue[NUM_MAGLIST-1], 'f', 1);
+    else
+        return QString::number(magValue[i-1], 'f', 1) + "≤M<" + QString::number(magValue[i], 'f', 1);
+}
+
+static QColor getMagColor(double magd)
+{
+    int i;
+    for(i=0;i<NUM_MAGLIST;i++)
+    {
+        if(magd < magValue[i])
+            break;
+        else
+            continue;
+    }
+
+    return magColor[i-1];
+}
+
+
+#define NUM_SOHLIST 3
+static int sohValue[NUM_SOHLIST] = {0, 300, 600};
+static QColor sohColor[NUM_SOHLIST] = {QColor(115, 210, 22), QColor(252, 175, 62), QColor(239, 41, 41)};
+
+
+
 
 static unsigned int GetBits(unsigned x, int p, int n) { return (x >> (p-n+1)) & ~(~0 << n) ; }
 

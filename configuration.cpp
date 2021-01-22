@@ -32,21 +32,20 @@ void Configuration::setup(_CONFIGURE configure)
     ui->pVelLE->setText(QString::number(con.p_vel, 'f', 2));
     ui->sVelLE->setText(QString::number(con.s_vel, 'f', 2));
 
-    if(con.mag_level1_alert_use==0) ui->level1AlertUseCB->setChecked(false); else ui->level1AlertUseCB->setChecked(true);
+    if(con.mag_alert_use==0) ui->magAlertUseCB->setChecked(false); else ui->magAlertUseCB->setChecked(true);
+
     ui->level1AlertMinMagLE->setText(QString::number(con.mag_level1_alert_min_mag, 'f', 1));
     ui->level1AlertMaxMagLE->setText(QString::number(con.mag_level1_alert_max_mag, 'f', 1));
     ui->level1AlertDistLE->setText(QString::number(con.mag_level1_alert_dist));
 
-    if(con.mag_level2_alert_use==0) ui->level2AlertUseCB->setChecked(false); else ui->level2AlertUseCB->setChecked(true);
     ui->level2AlertMinMagLE->setText(QString::number(con.mag_level2_alert_min_mag, 'f', 1));
     ui->level2AlertMaxMagLE->setText(QString::number(con.mag_level2_alert_max_mag, 'f', 1));
     ui->level2AlertDistLE->setText(QString::number(con.mag_level2_alert_dist));
 
-    if(con.pga_level1_alert_use==0) ui->level1AlertUsePGACB->setChecked(false); else ui->level1AlertUsePGACB->setChecked(true);
-    ui->level1AlertPGALE->setText(QString::number(con.pga_level1_threshold, 'f', 2));
+    if(con.inten_alert_use==0) ui->intenAlertUseCB->setChecked(false); else ui->intenAlertUseCB->setChecked(true);
 
-    if(con.pga_level2_alert_use==0) ui->level2AlertUsePGACB->setChecked(false); else ui->level2AlertUsePGACB->setChecked(true);
-    ui->level2AlertPGALE->setText(QString::number(con.pga_level2_threshold, 'f', 2));
+    ui->level1AlertINTENLE->setText(QString::number(con.inten_level1_threshold));
+    ui->level2AlertINTENLE->setText(QString::number(con.inten_level2_threshold));
 
     ui->numStaPGALE->setText(QString::number(con.pga_num_sta_threshold));
     ui->pgaTimeWindowLE->setText(QString::number(con.pga_time_window));
@@ -86,12 +85,15 @@ S_VEL=3.50
 
 #Alert Level
 ALARM_DEVICE=:0
-MAG_LEVEL1=1:2.0:4.0:100
-MAG_LEVEL2=1:4.0:999.0:9999
-PGA_LEVEL1=1:23.52
-PGA_LEVEL2=1:127.4
-NUM_STA_PGA=3
-PGA_TIME_WINDOW=2
+USE_MAG_ALERT=1
+MAG_LEVEL1=2.0:4.0:100
+MAG_LEVEL2=4.0:999.0:9999
+USE_INTEN_ALERT=1
+INTEN_LEVEL1=3
+INTEN_LEVEL2=5
+NUM_STA_FOR_PGA=3
+PGA_TIME_WINDOW=10
+
 */
 
     // write a configuration file
@@ -142,26 +144,27 @@ PGA_TIME_WINDOW=2
         stream << "\n";
         stream << "#Alert Level" << "\n";
         stream << "ALARM_DEVICE=" << con.alarm_device_ip << ":" << QString::number(con.alarm_device_port) << "\n";
+        stream << "USE_MAG_ALERT=";
+        if(ui->magAlertUseCB->isChecked()) stream << "1" << "\n";
+        else stream << "0" << "\n";
+
         stream << "MAG_LEVEL1=";
-        if(ui->level1AlertUseCB->isChecked()) stream << "1";
-        else stream << "0";
-        stream << ":" << ui->level1AlertMinMagLE->text()
+        stream << ui->level1AlertMinMagLE->text()
                << ":" << ui->level1AlertMaxMagLE->text() << ":" << ui->level1AlertDistLE->text() << "\n";
         stream << "MAG_LEVEL2=";
-        if(ui->level2AlertUseCB->isChecked()) stream << "1";
-        else stream << "0";
-        stream << ":" << ui->level2AlertMinMagLE->text()
+        stream << ui->level2AlertMinMagLE->text()
                << ":" << ui->level2AlertMaxMagLE->text() << ":" << ui->level2AlertDistLE->text() << "\n";
 
-        stream << "PGA_LEVEL1=";
-        if(ui->level1AlertUseCB->isChecked()) stream << "1";
-        else stream << "0";
-        stream << ":" << ui->level1AlertPGALE->text() << "\n";
-        stream << "PGA_LEVEL2=";
-        if(ui->level2AlertUseCB->isChecked()) stream << "1";
-        else stream << "0";
-        stream << ":" << ui->level2AlertPGALE->text() << "\n";
-        stream << "NUM_STA_PGA=" << ui->numStaPGALE->text() << "\n";
+        stream << "USE_INTEN_ALERT=";
+        if(ui->intenAlertUseCB->isChecked()) stream << "1" << "\n";
+        else stream << "0" << "\n";
+
+        stream << "INTEN_LEVEL1=";
+        stream << ui->level1AlertINTENLE->text() << "\n";
+        stream << "INTEN_LEVEL2=";
+        stream << ui->level2AlertINTENLE->text() << "\n";
+
+        stream << "NUM_STA_FOR_PGA=" << ui->numStaPGALE->text() << "\n";
         stream << "PGA_TIME_WINDOW=" << ui->pgaTimeWindowLE->text() << "\n";
 
         stream << "\n";

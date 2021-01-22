@@ -535,19 +535,23 @@ void ConfigurationWizard::writeConfigureToFile()
         stream << "P_VEL=" << QString::number(con.p_vel, 'f', 2) << "\n";
         stream << "S_VEL=" << QString::number(con.s_vel, 'f', 2) << "\n";
 
-
         stream << "\n";
         stream << "#Alert Level" << "\n";
         stream << "ALARM_DEVICE=" << con.alarm_device_ip << ":" << QString::number(con.alarm_device_port) << "\n";
 
-        stream << "MAG_LEVEL1=" << QString::number(con.mag_level1_alert_use) << ":" << QString::number(con.mag_level1_alert_min_mag, 'f', 1)
+        stream << "USE_MAG_ALERT=" << QString::number(con.mag_alert_use) << "\n";
+
+        stream << "MAG_LEVEL1=" << QString::number(con.mag_level1_alert_min_mag, 'f', 1)
                << ":" << QString::number(con.mag_level1_alert_max_mag, 'f', 1) << ":" << QString::number(con.mag_level1_alert_dist) << "\n";
-        stream << "MAG_LEVEL2=" << QString::number(con.mag_level2_alert_use) << ":" << QString::number(con.mag_level2_alert_min_mag, 'f', 1)
+        stream << "MAG_LEVEL2=" << QString::number(con.mag_level2_alert_min_mag, 'f', 1)
                << ":" << QString::number(con.mag_level2_alert_max_mag, 'f', 1) << ":" << QString::number(con.mag_level2_alert_dist) << "\n";
 
-        stream << "PGA_LEVEL1=" << QString::number(con.pga_level1_alert_use) << ":" << QString::number(con.pga_level1_threshold, 'f', 2) << "\n";
-        stream << "PGA_LEVEL2=" << QString::number(con.pga_level2_alert_use) << ":" << QString::number(con.pga_level2_threshold, 'f', 2) << "\n";
-        stream << "NUM_STA_PGA=" << QString::number(con.pga_num_sta_threshold) << "\n";
+        stream << "USE_INTEN_ALERT=" << QString::number(con.inten_alert_use) << "\n";
+
+        stream << "INTEN_LEVEL1=" << QString::number(con.inten_level1_threshold) << "\n";
+        stream << "INTEN_LEVEL2=" << QString::number(con.inten_level2_threshold) << "\n";
+
+        stream << "NUM_STA_FOR_PGA=" << QString::number(con.pga_num_sta_threshold) << "\n";
         stream << "PGA_TIME_WINDOW=" << QString::number(con.pga_time_window) << "\n";
 
         stream << "\n";
