@@ -31,6 +31,7 @@ AlarmDeviceMonitor::AlarmDeviceMonitor(QWidget *parent) :
 
 AlarmDeviceMonitor::~AlarmDeviceMonitor()
 {
+    tcpsocket->close();
     delete ui;
 }
 
@@ -91,21 +92,21 @@ void AlarmDeviceMonitor::disconnected()
 
 void AlarmDeviceMonitor::blinkRED()
 {
-    WCommand[RLAMP] = LAMP_BLINK ;
+    WCommand[RLAMP] = LAMP_ON ;
     WCommand[SOUND] = STYPE_B___ ;
     send_data(WCommand, 10);
 }
 
 void AlarmDeviceMonitor::blinkYELLOW()
 {
-    WCommand[YLAMP] = LAMP_BLINK ;
+    WCommand[YLAMP] = LAMP_ON ;
     WCommand[SOUND] = STYPE_pppp ;
     send_data(WCommand, 10);
 }
 
 void AlarmDeviceMonitor::blinkGREEN()
 {
-    WCommand[GLAMP] = LAMP_BLINK ;
+    WCommand[GLAMP] = LAMP_ON ;
     send_data(WCommand, 10);
 }
 
@@ -117,20 +118,20 @@ void AlarmDeviceMonitor::stopBlinkAll()
 
 void AlarmDeviceMonitor::blinkTestGREEN()
 {
-    WCommand[GLAMP] = LAMP_BLINK ;
+    WCommand[GLAMP] = LAMP_ON ;
 
     send_data(WCommand, 10);
 }
 
 void AlarmDeviceMonitor::blinkTestYELLOW()
 {
-    WCommand[YLAMP] = LAMP_BLINK ;
+    WCommand[YLAMP] = LAMP_ON ;
     send_data(WCommand, 10);
 }
 
 void AlarmDeviceMonitor::blinkTestRED()
 {
-    WCommand[RLAMP] = LAMP_BLINK ;
+    WCommand[RLAMP] = LAMP_ON ;
     send_data(WCommand, 10);
 }
 

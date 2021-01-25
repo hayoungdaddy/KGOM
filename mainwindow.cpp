@@ -1209,7 +1209,7 @@ void MainWindow::setAlertTab(QVector<_KGOnSite_Info_t> onsiteInfos, QVector<_EEW
 
     QString query = "SELECT lddate FROM event WHERE evid=" +  evid;
     this->eventModel->setQuery(query);
-    drawIntensityOnMap(this->eventModel->record(0).value("lddate").toString(), evid);;
+    //drawIntensityOnMap(this->eventModel->record(0).value("lddate").toString(), evid);;
 
     if(!eewInfos.isEmpty())
     {
@@ -2077,6 +2077,9 @@ void MainWindow::rvOnsiteInfo(_KGOnSite_Info_t info)
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
         if(this->isHidden())
+            this->show();
+
+        if(this->isMinimized())
             restoreAction->triggered();
 
         ui->mainTW->setCurrentIndex(1);
@@ -2183,6 +2186,9 @@ void MainWindow::rvPGAInfos(_PGA_DETECTION pd)
         log->write(configure.KGOM_HOME + "/logs/", "End Time(KST): " + eventStartTimeKST.addSecs(EVENT_DURATION).toString("yyyy/MM/dd hh:mm:ss"));
 
         if(this->isHidden())
+            this->show();
+
+        if(this->isMinimized())
             restoreAction->triggered();
 
         ui->mainTW->setCurrentIndex(1);
@@ -2304,6 +2310,9 @@ void MainWindow::rvEEWInfo(_EEWInfo eewInfo)
         maxMag = eewInfo.magnitude;
 
         if(this->isHidden())
+            this->show();
+
+        if(this->isMinimized())
             restoreAction->triggered();
 
         ui->mainTW->setCurrentIndex(1);
