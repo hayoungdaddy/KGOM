@@ -402,7 +402,7 @@ ConfigurationWizard::ConfigurationWizard(QWidget *parent) :
 
     log = new WriteLog();
 
-    setWindowFlags( Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowSystemMenuHint);
+    setWindowFlags(Qt::Drawer);
 
     /* load a osm map */
     QQuickView *view = new QQuickView();

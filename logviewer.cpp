@@ -7,6 +7,8 @@ LogViewer::LogViewer(QString logDir, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowFlags(Qt::Drawer);
+
     QDate date;
     date = QDate::currentDate();
 

@@ -65,6 +65,7 @@ private:
     DetailView *detailview;
     AboutThis *aboutthis;
     WriteLog *log;
+    LogViewer *logviewer;
 
     RecvEEWMessage *krecveew;
     RecvOnsiteMessage *krecvOnsite;

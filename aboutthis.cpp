@@ -10,6 +10,8 @@ AboutThis::AboutThis(QString homeDir, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowFlags(Qt::Drawer);
+
     QImage *img = new QImage();
     QPixmap *pix = new QPixmap();
 

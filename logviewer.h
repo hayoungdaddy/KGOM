@@ -17,6 +17,8 @@ public:
     explicit LogViewer(QString logDir = 0, QWidget *parent = 0);
     ~LogViewer();
 
+    //void setup()
+
 private:
     Ui::LogViewer *ui;
     QString dir;

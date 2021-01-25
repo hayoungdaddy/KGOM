@@ -7,7 +7,7 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    setWindowFlags(Qt::Drawer);
+    setWindowFlags( Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
 
     activemq::library::ActiveMQCPP::initializeLibrary();
 
@@ -61,6 +61,9 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
 
     aboutthis = new AboutThis(configure.KGOM_HOME, this);
     aboutthis->hide();
+
+    logviewer = new LogViewer(configure.KGOM_HOME + "/logs", this);
+    logviewer->hide();
 
     configuration = new Configuration(this);
     configuration->hide();
@@ -425,11 +428,12 @@ void MainWindow::configurationActionTriggered()
     configuration->setup(configure);
     log->write(configure.KGOM_HOME + "/logs/", "Configuration window opened.");
     configuration->show();
+    configuration->raise();
 }
 
 void MainWindow::logViewerActionTriggered()
 {
-    LogViewer *logviewer = new LogViewer(configure.KGOM_HOME + "/logs");
+    //LogViewer *logviewer = new LogViewer(configure.KGOM_HOME + "/logs", this);
     logviewer->show();
 }
 

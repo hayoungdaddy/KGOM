@@ -11,7 +11,7 @@ Configuration::Configuration(QWidget *parent) :
 
     log = new WriteLog();
 
-    setWindowFlags( Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowSystemMenuHint);
+    setWindowFlags(Qt::Drawer);
 
     connect(ui->savePB, SIGNAL(clicked(bool)), this, SLOT(writeConfigureToFile()));
 }
