@@ -51,8 +51,6 @@ public:
     explicit MainWindow(QString configFile = 0, QWidget *parent = 0);
     ~MainWindow();
 
-    //void setVisible(bool visible) override;
-
 protected:
     void closeEvent(QCloseEvent *event) override;
     void setVisible(bool visible) override;

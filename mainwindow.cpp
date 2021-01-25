@@ -7,6 +7,8 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowFlags(Qt::Drawer);
+
     activemq::library::ActiveMQCPP::initializeLibrary();
 
     // This line is essential

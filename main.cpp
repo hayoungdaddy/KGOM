@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     MainWindow w(argv[1]);
     w.show();
-    //w.showMaximized();
+    w.raise();
 
     return a.exec();
 }
