@@ -206,6 +206,7 @@ private slots:
     void sohPBClicked();
     void alarmMonClicked();
     void recvAlarmDeviceSOHfromWG(int);
+    void recvAlarmSoundfromWG(bool);
 
     void blinkingWindow();
     void stopBlinkPBClicked();

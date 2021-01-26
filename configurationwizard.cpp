@@ -538,6 +538,7 @@ void ConfigurationWizard::writeConfigureToFile()
         stream << "\n";
         stream << "#Alert Level" << "\n";
         stream << "ALARM_DEVICE=" << con.alarm_device_ip << ":" << QString::number(con.alarm_device_port) << "\n";
+        stream << "USE_ALARM_SOUND=" << QString::number(con.use_alarm_sound) << "\n";
 
         stream << "USE_MAG_ALERT=" << QString::number(con.mag_alert_use) << "\n";
 

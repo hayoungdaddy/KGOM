@@ -97,4 +97,4 @@ RESOURCES += \
 
 LIBS += -lactivemq-cpp
 INCLUDEPATH += /usr/local/include/activemq-cpp-3.9.5
-INCLUDEPATH += /usr/local/apr/include/apr-1/
+INCLUDEPATH += /usr/include/apr-1.0/

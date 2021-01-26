@@ -34,9 +34,10 @@ public:
     explicit AlarmDeviceMonitor(QWidget *parent = nullptr);
     ~AlarmDeviceMonitor();
 
-    void setup(QString, int);
+    void setup(QString, int, int);
 
     bool alarmDeviceStatus;
+    bool useAlarmSound;
 
     char WCommand[10]={0x57,} ;
     char RCommand[10]={0x52,} ;
@@ -76,10 +77,12 @@ private:
 
 private slots:
     void doRepeatWork();
+    void useAlarmSoundCBClicked();
 
 signals:
     void dataReceived(QByteArray);
     void sendAlarmDeviceSOHtoMainWindow(int);
+    void sendAlarmSoundtoMainWindow(bool);
 };
 
 #endif // ALARMDEVICEMONITOR_H

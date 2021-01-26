@@ -267,6 +267,7 @@ typedef struct _configure
     // Alert Level
     QString alarm_device_ip;
     int alarm_device_port;
+    int use_alarm_sound;
 
     int mag_alert_use;
 

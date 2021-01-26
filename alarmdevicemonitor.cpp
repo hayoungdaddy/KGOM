@@ -9,6 +9,9 @@ AlarmDeviceMonitor::AlarmDeviceMonitor(QWidget *parent) :
 
     codec = QTextCodec::codecForName("utf-8");
 
+    //useAlarmSound = true;
+    //ui->useAlarmSoundCB->setChecked(true);
+
     tcpsocket = new QTcpSocket();
     tcpsocket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
     //connect(tcpsocket, SIGNAL(readyRead()), this, SLOT(readyRead()));
@@ -27,6 +30,8 @@ AlarmDeviceMonitor::AlarmDeviceMonitor(QWidget *parent) :
     connect(ui->sound2PB, SIGNAL(clicked()), this, SLOT(sound2Test()));
     connect(ui->stopSoundPB, SIGNAL(clicked()), this, SLOT(stopBlinkAll()));
     connect(ui->stopAllPB, SIGNAL(clicked()), this, SLOT(stopBlinkAll()));
+
+    connect(ui->useAlarmSoundCB, SIGNAL(clicked()), this, SLOT(useAlarmSoundCBClicked()));
 }
 
 AlarmDeviceMonitor::~AlarmDeviceMonitor()
@@ -69,10 +74,33 @@ void AlarmDeviceMonitor::doRepeatWork()
     }
 }
 
-void AlarmDeviceMonitor::setup(QString ipS, int portI)
+void AlarmDeviceMonitor::useAlarmSoundCBClicked()
+{
+    if(ui->useAlarmSoundCB->isChecked())
+        useAlarmSound = true;
+    else
+        useAlarmSound = false;
+
+    qDebug() << useAlarmSound;
+
+    emit sendAlarmSoundtoMainWindow(useAlarmSound);
+}
+
+void AlarmDeviceMonitor::setup(QString ipS, int portI ,int use_alarm_sound)
 {
     ipaddress = ipS;
     port = portI;
+
+    if(use_alarm_sound == 1)
+    {
+        useAlarmSound = true;
+        ui->useAlarmSoundCB->setChecked(true);
+    }
+    else
+    {
+        useAlarmSound = false;
+        ui->useAlarmSoundCB->setChecked(false);
+    }
 
     newConnection();
 }
@@ -93,14 +121,19 @@ void AlarmDeviceMonitor::disconnected()
 void AlarmDeviceMonitor::blinkRED()
 {
     WCommand[RLAMP] = LAMP_ON ;
-    WCommand[SOUND] = STYPE_B___ ;
+
+    if(useAlarmSound)
+        WCommand[SOUND] = STYPE_B___ ;
+
     send_data(WCommand, 10);
 }
 
 void AlarmDeviceMonitor::blinkYELLOW()
 {
     WCommand[YLAMP] = LAMP_ON ;
-    WCommand[SOUND] = STYPE_pppp ;
+
+    if(useAlarmSound)
+        WCommand[SOUND] = STYPE_pppp ;
     send_data(WCommand, 10);
 }
 

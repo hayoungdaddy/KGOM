@@ -7,7 +7,7 @@ MainWindow::MainWindow(QString configFile, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    setWindowFlags( Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
+    setWindowFlags( Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowMaximizeButtonHint);
 
     activemq::library::ActiveMQCPP::initializeLibrary();
 
@@ -428,7 +428,7 @@ void MainWindow::configurationActionTriggered()
     configuration->setup(configure);
     log->write(configure.KGOM_HOME + "/logs/", "Configuration window opened.");
     configuration->show();
-    configuration->raise();
+    //configuration->raise();
 }
 
 void MainWindow::logViewerActionTriggered()
@@ -819,6 +819,10 @@ void MainWindow::readConfigure(QString configFile)
                 configure.alarm_device_ip = _line.section("=", 1, 1).section(":", 0, 0);
                 configure.alarm_device_port = _line.section("=", 1, 1).section(":", 1, 1).toInt();
             }
+            else if(_line.startsWith("USE_ALARM_SOUND"))
+            {
+                configure.use_alarm_sound = _line.section("=", 1,1).toInt();
+            }
             else if(_line.startsWith("USE_MAG_ALERT"))
             {
                 configure.mag_alert_use = _line.section("=", 1, 1).toInt();
@@ -944,10 +948,11 @@ void MainWindow::createActionsOnToolbar()
         alarmMonWA->setDefaultWidget(alarmMonPB);
         ui->mainToolBar->addAction(alarmMonWA);
         alarmMonPB->setObjectName("ALARM_DEVICE");
-        alarmMon->setup(configure.alarm_device_ip, configure.alarm_device_port);
+        alarmMon->setup(configure.alarm_device_ip, configure.alarm_device_port, configure.use_alarm_sound);
         alarmMon->hide();
         connect(alarmMonPB, SIGNAL(clicked(bool)), this, SLOT(alarmMonClicked()));
         connect(alarmMon, SIGNAL(sendAlarmDeviceSOHtoMainWindow(int)), this, SLOT(recvAlarmDeviceSOHfromWG(int)));
+        connect(alarmMon, SIGNAL(sendAlarmSoundtoMainWindow(bool)), this, SLOT(recvAlarmSoundfromWG(bool)));
     }
 }
 
@@ -967,6 +972,92 @@ void MainWindow::recvAlarmDeviceSOHfromWG(int status)
     }
     else if(status == 1)
         alarmMonPB->setStyleSheet("background-color: rgb(115, 210, 22);");
+}
+
+void MainWindow::recvAlarmSoundfromWG(bool useAlarmSound)
+{
+    if(useAlarmSound)
+    {
+        configure.use_alarm_sound = 1;
+        log->write(configure.KGOM_HOME + "/logs/", "Turn on the alarm sound");
+    }
+    else
+    {
+        configure.use_alarm_sound = 0;
+        log->write(configure.KGOM_HOME + "/logs/", "Turn off the alarm sound");
+    }
+
+    // write a configuration file
+    QFile file(configure.configFileName);
+    if(file.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&file);
+        stream << "#My Position Info" << "\n";
+        stream << "MYPOSITION_LAT=" << QString::number(configure.myposition_lat, 'f', 4) << "\n";
+        stream << "MYPOSITION_LON=" << QString::number(configure.myposition_lon, 'f', 4) << "\n";
+
+        stream << "\n";
+        stream << "#Local Station Info" << "\n";
+        for(int i=0;i<configure.localStaVT.count();i++)
+        {
+            stream << "LOCAL_STA=" << configure.localStaVT.at(i).sta << ":" << configure.localStaVT.at(i).chan << ":" << configure.localStaVT.at(i).net
+                   << ":" << configure.localStaVT.at(i).loc << ":" << QString::number(configure.localStaVT.at(i).lat, 'f', 6) << ":" << QString::number(configure.localStaVT.at(i).lon, 'f', 6)
+                   << ":" << QString::number(configure.localStaVT.at(i).elev, 'f', 1) << "\n";
+        }
+
+        stream << "\n";
+        stream << "#KISS Station Info" << "\n";
+        for(int i=0;i<configure.kissStaVT.count();i++)
+        {
+            stream << "KISS_STA=" << configure.kissStaVT.at(i).sta << ":" << configure.kissStaVT.at(i).chan << ":" << configure.kissStaVT.at(i).net
+                   << ":" << configure.kissStaVT.at(i).loc << ":" << QString::number(configure.kissStaVT.at(i).lat, 'f', 6) << ":" << QString::number(configure.kissStaVT.at(i).lon, 'f', 6)
+                   << ":" << QString::number(configure.kissStaVT.at(i).elev, 'f', 1) << "\n";
+        }
+
+        stream << "\n";
+        stream << "#LOCAL AMQ Server Info" << "\n";
+        stream << "LOCAL_ONSITE_AMQ=" << configure.local_onsite_amq.ip << ":" << configure.local_onsite_amq.port << ":" << configure.local_onsite_amq.user << ":" << configure.local_onsite_amq.passwd << ":" << configure.local_onsite_amq.topic << "\n";
+        stream << "LOCAL_SOH_AMQ=" << configure.local_soh_amq.ip << ":" << configure.local_soh_amq.port << ":" << configure.local_soh_amq.user << ":" << configure.local_soh_amq.passwd << ":" << configure.local_soh_amq.topic << "\n";
+        stream << "LOCAL_PGA_AMQ=" << configure.local_pga_amq.ip << ":" << configure.local_pga_amq.port << ":" << configure.local_pga_amq.user << ":" << configure.local_pga_amq.passwd << ":" << configure.local_pga_amq.topic << "\n";
+
+        stream << "\n";
+        stream << "#KIGAM AMQ Server Info" << "\n";
+        stream << "KISS_EEW_AMQ=" << configure.kiss_eew_amq.ip << ":" << configure.kiss_eew_amq.port << ":" << configure.kiss_eew_amq.user << ":" << configure.kiss_eew_amq.passwd << ":" << configure.kiss_eew_amq.topic << "\n";
+        stream << "KISS_ONSITE_AMQ=" << configure.kiss_onsite_amq.ip << ":" << configure.kiss_onsite_amq.port << ":" << configure.kiss_onsite_amq.user << ":" << configure.kiss_onsite_amq.passwd << ":" << configure.kiss_onsite_amq.topic << "\n";
+        stream << "KISS_SOH_AMQ=" << configure.kiss_soh_amq.ip << ":" << configure.kiss_soh_amq.port << ":" << configure.kiss_soh_amq.user << ":" << configure.kiss_soh_amq.passwd << ":" << configure.kiss_soh_amq.topic << "\n";
+        stream << "KISS_PGA_AMQ=" << configure.kiss_pga_amq.ip << ":" << configure.kiss_pga_amq.port << ":" << configure.kiss_pga_amq.user << ":" << configure.kiss_pga_amq.passwd << ":" << configure.kiss_pga_amq.topic << "\n";
+
+        stream << "\n";
+        stream << "#Velocity Info" << "\n";
+        stream << "P_VEL=" << QString::number(configure.p_vel, 'f', 2) << "\n";
+        stream << "S_VEL=" << QString::number(configure.s_vel, 'f', 2) << "\n";
+
+        stream << "\n";
+        stream << "#Alert Level" << "\n";
+        stream << "ALARM_DEVICE=" << configure.alarm_device_ip << ":" << QString::number(configure.alarm_device_port) << "\n";
+        stream << "USE_ALARM_SOUND=" << QString::number(configure.use_alarm_sound) << "\n";
+
+        stream << "USE_MAG_ALERT=" << QString::number(configure.mag_alert_use) << "\n";
+
+        stream << "MAG_LEVEL1=" << QString::number(configure.mag_level1_alert_min_mag, 'f', 1)
+               << ":" << QString::number(configure.mag_level1_alert_max_mag, 'f', 1) << ":" << QString::number(configure.mag_level1_alert_dist) << "\n";
+        stream << "MAG_LEVEL2=" << QString::number(configure.mag_level2_alert_min_mag, 'f', 1)
+               << ":" << QString::number(configure.mag_level2_alert_max_mag, 'f', 1) << ":" << QString::number(configure.mag_level2_alert_dist) << "\n";
+
+        stream << "USE_INTEN_ALERT=" << QString::number(configure.inten_alert_use) << "\n";
+
+        stream << "INTEN_LEVEL1=" << QString::number(configure.inten_level1_threshold) << "\n";
+        stream << "INTEN_LEVEL2=" << QString::number(configure.inten_level2_threshold) << "\n";
+
+        stream << "NUM_STA_FOR_PGA=" << QString::number(configure.pga_num_sta_threshold) << "\n";
+        stream << "PGA_TIME_WINDOW=" << QString::number(configure.pga_time_window) << "\n";
+
+        stream << "\n";
+
+        file.close();
+    }
+
+    log->write(configure.KGOM_HOME + "/logs/", "Succeed saving parameters.");
 }
 
 void MainWindow::showAnimation()

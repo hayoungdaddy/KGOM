@@ -30,7 +30,7 @@ private:
 
     QTextCodec *codec;
 
-private slots:
+public slots:
     void writeConfigureToFile();
 
 signals:

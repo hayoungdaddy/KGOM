@@ -85,6 +85,7 @@ S_VEL=3.50
 
 #Alert Level
 ALARM_DEVICE=:0
+USE_ALARM_SOUND=1
 USE_MAG_ALERT=1
 MAG_LEVEL1=2.0:4.0:100
 MAG_LEVEL2=4.0:999.0:9999
@@ -144,6 +145,7 @@ PGA_TIME_WINDOW=10
         stream << "\n";
         stream << "#Alert Level" << "\n";
         stream << "ALARM_DEVICE=" << con.alarm_device_ip << ":" << QString::number(con.alarm_device_port) << "\n";
+        stream << "USE_ALARM_SOUND=" << QString::number(con.use_alarm_sound) << "\n";
         stream << "USE_MAG_ALERT=";
         if(ui->magAlertUseCB->isChecked()) stream << "1" << "\n";
         else stream << "0" << "\n";
